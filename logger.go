@@ -19,12 +19,9 @@ import (
 
 // RFC5424 log message levels.
 const (
-	LevelEmergency Level = iota
-	LevelAlert
-	LevelCritical
+	LevelFatal Level = iota
 	LevelError
-	LevelWarning
-	LevelNotice
+	LevelWarn
 	LevelInfo
 	LevelDebug
 )
@@ -34,14 +31,11 @@ type Level int
 
 // LevelNames maps log levels to names
 var LevelNames = map[Level]string{
-	LevelDebug:     "Debug",
-	LevelInfo:      "Info",
-	LevelNotice:    "Notice",
-	LevelWarning:   "Warning",
-	LevelError:     "Error",
-	LevelCritical:  "Critical",
-	LevelAlert:     "Alert",
-	LevelEmergency: "Emergency",
+	LevelDebug: "Debug",
+	LevelInfo:  "Info",
+	LevelWarn:  "Warn",
+	LevelError: "Error",
+	LevelFatal: "Fatal",
 }
 
 // String returns the string representation of the log level
@@ -132,58 +126,38 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return &Logger{l.coreLogger, category, l.Formatter}
 }
 
-// Emergency logs a message indicating the system is unusable.
-// Please refer to Error() for how to use this method.
-func (l *Logger) Emergency(format string, a ...interface{}) {
-	l.Log(LevelEmergency, format, a...)
-}
-
-// Alert logs a message indicating action must be taken immediately.
-// Please refer to Error() for how to use this method.
-func (l *Logger) Alert(format string, a ...interface{}) {
-	l.Log(LevelAlert, format, a...)
-}
-
-// Critical logs a message indicating critical conditions.
-// Please refer to Error() for how to use this method.
-func (l *Logger) Critical(format string, a ...interface{}) {
-	l.Log(LevelCritical, format, a...)
+func (l *Logger) Fatalf(format string, a ...interface{}) {
+	l.Logf(LevelFatal, format, a...)
 }
 
 // Error logs a message indicating an error condition.
 // This method takes one or multiple parameters. If a single parameter
 // is provided, it will be treated as the log message. If multiple parameters
 // are provided, they will be passed to fmt.Sprintf() to generate the log message.
-func (l *Logger) Error(format string, a ...interface{}) {
-	l.Log(LevelError, format, a...)
+func (l *Logger) Errorf(format string, a ...interface{}) {
+	l.Logf(LevelError, format, a...)
 }
 
-// Warning logs a message indicating a warning condition.
+// Warn logs a message indicating a warning condition.
 // Please refer to Error() for how to use this method.
-func (l *Logger) Warning(format string, a ...interface{}) {
-	l.Log(LevelWarning, format, a...)
-}
-
-// Notice logs a message meaning normal but significant condition.
-// Please refer to Error() for how to use this method.
-func (l *Logger) Notice(format string, a ...interface{}) {
-	l.Log(LevelNotice, format, a...)
+func (l *Logger) Warnf(format string, a ...interface{}) {
+	l.Logf(LevelWarn, format, a...)
 }
 
 // Info logs a message for informational purpose.
 // Please refer to Error() for how to use this method.
-func (l *Logger) Info(format string, a ...interface{}) {
-	l.Log(LevelInfo, format, a...)
+func (l *Logger) Infof(format string, a ...interface{}) {
+	l.Logf(LevelInfo, format, a...)
 }
 
 // Debug logs a message for debugging purpose.
 // Please refer to Error() for how to use this method.
-func (l *Logger) Debug(format string, a ...interface{}) {
-	l.Log(LevelDebug, format, a...)
+func (l *Logger) Debugf(format string, a ...interface{}) {
+	l.Logf(LevelDebug, format, a...)
 }
 
-// Log logs a message of a specified severity level.
-func (l *Logger) Log(level Level, format string, a ...interface{}) {
+// Logf logs a message of a specified severity level.
+func (l *Logger) Logf(level Level, format string, a ...interface{}) {
 	if level > l.MaxLevel || !l.open {
 		return
 	}
@@ -191,6 +165,50 @@ func (l *Logger) Log(level Level, format string, a ...interface{}) {
 	if len(a) > 0 {
 		message = fmt.Sprintf(format, a...)
 	}
+	l.newEntry(level, message)
+}
+
+func (l *Logger) Fatal(a ...interface{}) {
+	l.Log(LevelFatal, a...)
+}
+
+// Error logs a message indicating an error condition.
+// This method takes one or multiple parameters. If a single parameter
+// is provided, it will be treated as the log message. If multiple parameters
+// are provided, they will be passed to fmt.Sprintf() to generate the log message.
+func (l *Logger) Error(a ...interface{}) {
+	l.Log(LevelError, a...)
+}
+
+// Warn logs a message indicating a warning condition.
+// Please refer to Error() for how to use this method.
+func (l *Logger) Warn(a ...interface{}) {
+	l.Log(LevelWarn, a...)
+}
+
+// Info logs a message for informational purpose.
+// Please refer to Error() for how to use this method.
+func (l *Logger) Info(a ...interface{}) {
+	l.Log(LevelInfo, a...)
+}
+
+// Debug logs a message for debugging purpose.
+// Please refer to Error() for how to use this method.
+func (l *Logger) Debug(a ...interface{}) {
+	l.Log(LevelDebug, a...)
+}
+
+// Log logs a message of a specified severity level.
+func (l *Logger) Log(level Level, a ...interface{}) {
+	if level > l.MaxLevel || !l.open {
+		return
+	}
+	message := fmt.Sprint(a...)
+	l.newEntry(level, message)
+}
+
+// Log logs a message of a specified severity level.
+func (l *Logger) newEntry(level Level, message string) {
 	entry := &Entry{
 		Category: l.Category,
 		Level:    level,

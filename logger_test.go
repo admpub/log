@@ -5,8 +5,8 @@
 package log_test
 
 import (
+	"github.com/admpub/log"
 	"github.com/go-ozzo/ozzo-config"
-	"github.com/go-ozzo/ozzo-log"
 	"io"
 	"testing"
 )
@@ -83,29 +83,26 @@ func TestLoggerLog(t *testing.T) {
 		t.Errorf("target.open = %v, expected %v", target.open, true)
 	}
 
-	logger.Log(log.LevelInfo, "t0: %v", 1)
-	logger.Debug("t1: %v", 2)
+	logger.Logf(log.LevelInfo, "t0: %v", 1)
+	logger.Debugf("t1: %v", 2)
 	logger.Info("t2")
-	logger.Warning("t3")
-	logger.Notice("t4")
-	logger.Error("t5")
-	logger.Critical("t6")
-	logger.Alert("t7")
-	logger.Emergency("t8")
+	logger.Warn("t3")
+	logger.Error("t4")
+	logger.Fatal("t5")
 
 	logger.Close()
 
-	if len(target.entries) != 9 {
+	if len(target.entries) != 6 {
 		t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 9)
 	}
 	levels := ""
 	messages := ""
-	for i := 0; i < 9; i++ {
+	for i := 0; i < 6; i++ {
 		levels += target.entries[i].Level.String() + ","
 		messages += target.entries[i].Message + ","
 	}
-	expectedLevels := "Info,Debug,Info,Warning,Notice,Error,Critical,Alert,Emergency,"
-	expectedMessages := "t0: 1,t1: 2,t2,t3,t4,t5,t6,t7,t8,"
+	expectedLevels := "Info,Debug,Info,Warn,Error,Fatal,"
+	expectedMessages := "t0: 1,t1: 2,t2,t3,t4,t5,"
 	if levels != expectedLevels {
 		t.Errorf("levels = %v, expected %v", levels, expectedLevels)
 	}
@@ -147,8 +144,8 @@ func TestLoggerConfig(t *testing.T) {
 	if err := c.Configure(logger, "Logger"); err != nil {
 		t.Errorf("config.Configure(logger): %v", err)
 	}
-	if logger.MaxLevel != log.LevelCritical {
-		t.Errorf("logger.MaxLevel = %v, expected %v", logger.MaxLevel, log.LevelCritical)
+	if logger.MaxLevel != log.LevelWarn {
+		t.Errorf("logger.MaxLevel = %v, expected %v", logger.MaxLevel, log.LevelWarn)
 	}
 	if logger.Category != "app2" {
 		t.Errorf("logger.Category = %v, expected %v", logger.Category, "app2")

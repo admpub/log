@@ -4,7 +4,7 @@
 
 package log_test
 
-import "github.com/go-ozzo/ozzo-log"
+import "github.com/admpub/log"
 
 func ExampleLogger_Error() {
 	logger := log.NewLogger()

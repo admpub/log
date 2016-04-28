@@ -5,7 +5,7 @@
 package log_test
 
 import (
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 	"strings"
 	"testing"
 )

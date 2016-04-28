@@ -66,7 +66,7 @@ func main() {
 	// 自定义日志类别
 	l := logger.GetLogger("app.services")
 	l.Info("some info")
-	l.Warning("some warning")
+	l.Warn("some warning")
 
 	...
 }
@@ -102,12 +102,9 @@ logger.Close()
 
 记录消息时，可以通过调用 `Logger` 结构的下列方法记录特定的严重级别（级别的设置依照 RFC5424 标准）
 
-* `Emergency()`：系统完全无法使用的情形
-* `Alert()`：必须立刻采取措施的情形
-* `Critical()`：危笃情形
+* `Fatal()`：致命情形
 * `Error()`：错误情形
-* `Warning()`：警告情形
-* `Notice()`：正常但值得注意的情形
+* `Warn()`：警告情形
 * `Info()`：为了记录信息
 * `Debug()`：为了调试
 
@@ -173,8 +170,8 @@ logger.CallStackFilter = "myapp/src"
 
 ```go
 logger := log.NewLogger()
-// 只记录级别在 Emergency（紧急）和 Warning（警告）之间的消息
-logger.MaxLevel = log.LevelWarning
+// 只记录级别在 Fatal（致命）和 Warning（警告）之间的消息
+logger.MaxLevel = log.LevelWarn
 ```
 
 除了在记录器层级进行过滤之外，也可以在日志标的层级进行更加细粒度地过滤。对于每一个标的，可以单独指定它的 
@@ -182,7 +179,7 @@ logger.MaxLevel = log.LevelWarning
 
 ```go
 target := log.NewConsoleTarget()
-// 此标的会处理级别在 Emergency 和 Info 之间的消息
+// 此标的会处理级别在 Fatal 和 Info 之间的消息
 target.MaxLevel = log.LevelInfo
 // 处理所有消息分类以 "system.db." 或 "app." 开头的消息
 target.Categories = []string{"system.db.*", "app.*"}

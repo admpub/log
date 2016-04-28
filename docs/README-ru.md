@@ -60,7 +60,7 @@ func main() {
 	// настраиваем категории логирования
 	l := logger.GetLogger("app.services")
 	l.Info("some info")
-	l.Warning("some warning")
+	l.Warn("some warning")
 
 	...
 	logger.Close()
@@ -99,12 +99,9 @@ logger.Close()
 Вы можете сохранять сообщения определенного уровня важности (в соответствии со стандартом RFC5424)
 посредством вывода предопределенных методов в структуре `Logger`:
 
-* `Emergency()`: система непригодна для использования.
-* `Alert()`: действия должны быть предприняты немедленно.
-* `Critical()`: критические условия.
+* `Fatal()`: система непригодна для использования.
 * `Error()`: состояния ошибки.
-* `Warning()`: различные предупреждения.
-* `Notice()`: нормальные, но существенные условия.
+* `Warn()`: различные предупреждения.
 * `Info()`: информационные цели.
 * `Debug()`: цели отладки.
 
@@ -156,8 +153,8 @@ logger = logger.GetLogger("app", func (l *Logger, e *Entry) string {
 
 ```go
 logger := log.NewLogger()
-// сохранять сообщения только между уровнями Emergency и Warning
-logger.MaxLevel = log.LevelWarning
+// сохранять сообщения только между уровнями Fatal и Warning
+logger.MaxLevel = log.LevelWarn
 ```
 
 Кроме фильтрации на уровне логгеров, более тонка фильтрация может быть настроена на уровне целей. 
@@ -166,7 +163,7 @@ logger.MaxLevel = log.LevelWarning
 
 ```go
 target := log.NewConsoleTarget()
-// принимает сообщения между уровнями Emergency и Info
+// принимает сообщения между уровнями Fatal и Info
 target.MaxLevel = log.LevelInfo
 // обрабатывает сообщения начинающиеся с "system.db." или "app."
 target.Categories = []string{"system.db.*", "app.*"}

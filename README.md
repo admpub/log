@@ -67,7 +67,7 @@ func main() {
 	// customizes log category
 	l := logger.GetLogger("app.services")
 	l.Info("some info")
-	l.Warning("some warning")
+	l.Warn("some warning")
 
 	...
 }
@@ -107,12 +107,9 @@ logger.Close()
 You can log a message of a particular severity level (following the RFC5424 standard)
 by calling one of the following methods of the `Logger` struct:
 
-* `Emergency()`: the system is unusable.
-* `Alert()`: action must be taken immediately.
-* `Critical()`: critical conditions.
+* `Fatal()`: fatal conditions.
 * `Error()`: error conditions.
-* `Warning()`: warning conditions.
-* `Notice()`: normal but significant conditions.
+* `Warn()`: warning conditions.
 * `Info()`: informational purpose.
 * `Debug()`: debugging purpose.
 
@@ -182,8 +179,8 @@ By default, messages of *all* severity levels will be recorded. You may customiz
 
 ```go
 logger := log.NewLogger()
-// only record messages between Emergency and Warning levels
-logger.MaxLevel = log.LevelWarning
+// only record messages between Fatal and Warning levels
+logger.MaxLevel = log.LevelWarn
 ```
 
 Besides filtering messages at the logger level, a finer grained message filtering can be done
@@ -192,7 +189,7 @@ you can also specify which categories of the messages the target should handle. 
 
 ```go
 target := log.NewConsoleTarget()
-// handle messages between Emergency and Info levels
+// handle messages between Fatal and Info levels
 target.MaxLevel = log.LevelInfo
 // handle messages of categories which start with "system.db." or "app."
 target.Categories = []string{"system.db.*", "app.*"}

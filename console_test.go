@@ -5,7 +5,7 @@
 package log_test
 
 import (
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 	"strings"
 	"testing"
 )
@@ -56,8 +56,8 @@ func TestConsoleTarget(t *testing.T) {
 	logger.Targets = append(logger.Targets, target)
 	logger.Open()
 
-	logger.Info("t1: %v", 2)
-	logger.GetLogger("system.db").Info("t2: %v", 3)
+	logger.Infof("t1: %v", 2)
+	logger.GetLogger("system.db").Infof("t2: %v", 3)
 
 	logger.Close()
 	<-target.done
@@ -66,6 +66,6 @@ func TestConsoleTarget(t *testing.T) {
 		t.Errorf("Found unexpected %q", "t1: 2")
 	}
 	if !strings.Contains(string(writer.bytes), "t2: 3") {
-		t.Errorf("Expected %q not found", "t2: 3")
+		t.Errorf("Expected %q not found from `%q`", "t2: 3", string(writer.bytes))
 	}
 }

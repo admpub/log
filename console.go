@@ -21,14 +21,11 @@ func newConsoleBrush(format string) consoleBrush {
 }
 
 var brushes = map[Level]consoleBrush{
-	LevelDebug:     newConsoleBrush("39"),   // default
-	LevelInfo:      newConsoleBrush("32"),   // green
-	LevelNotice:    newConsoleBrush("36"),   // cyan
-	LevelWarning:   newConsoleBrush("33"),   // yellow
-	LevelError:     newConsoleBrush("31"),   // red
-	LevelCritical:  newConsoleBrush("35"),   // magenta
-	LevelAlert:     newConsoleBrush("1;91"), // bold light red
-	LevelEmergency: newConsoleBrush("1;95"), // bold light magenta
+	LevelDebug: newConsoleBrush("39"), // default
+	LevelInfo:  newConsoleBrush("32"), // green
+	LevelWarn:  newConsoleBrush("33"), // yellow
+	LevelError: newConsoleBrush("31"), // red
+	LevelFatal: newConsoleBrush("35"), // magenta
 }
 
 // ConsoleTarget writes filtered log messages to console window.
