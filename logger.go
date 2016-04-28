@@ -38,6 +38,14 @@ var LevelNames = map[Level]string{
 	LevelFatal: "Fatal",
 }
 
+var Levels = map[string]Level{
+	"Debug": LevelDebug,
+	"Info":  LevelInfo,
+	"Warn":  LevelWarn,
+	"Error": LevelError,
+	"Fatal": LevelFatal,
+}
+
 // String returns the string representation of the log level
 func (l Level) String() string {
 	if name, ok := LevelNames[l]; ok {
@@ -105,14 +113,22 @@ type Logger struct {
 // The new logger takes these default options:
 // ErrorWriter: os.Stderr, BufferSize: 1024, MaxLevel: LevelDebug,
 // Category: app, Formatter: DefaultFormatter
-func NewLogger() *Logger {
+func NewLogger(args ...string) *Logger {
 	logger := &coreLogger{
 		ErrorWriter: os.Stderr,
 		BufferSize:  1024,
 		MaxLevel:    LevelDebug,
 		Targets:     make([]Target, 0),
 	}
-	return &Logger{logger, "app", DefaultFormatter}
+	category := `app`
+	if len(args) > 0 {
+		category = args[0]
+	}
+	return &Logger{logger, category, DefaultFormatter}
+}
+
+func New(args ...string) *Logger {
+	return NewLogger(args...)
 }
 
 // GetLogger creates a logger with the specified category and log formatter.
@@ -126,11 +142,17 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return &Logger{l.coreLogger, category, l.Formatter}
 }
 
+func (l *Logger) SetLevel(level string) {
+	if le, ok := Levels[level]; ok {
+		l.MaxLevel = le
+	}
+}
+
 func (l *Logger) Fatalf(format string, a ...interface{}) {
 	l.Logf(LevelFatal, format, a...)
 }
 
-// Error logs a message indicating an error condition.
+// Errorf logs a message indicating an error condition.
 // This method takes one or multiple parameters. If a single parameter
 // is provided, it will be treated as the log message. If multiple parameters
 // are provided, they will be passed to fmt.Sprintf() to generate the log message.
@@ -138,19 +160,19 @@ func (l *Logger) Errorf(format string, a ...interface{}) {
 	l.Logf(LevelError, format, a...)
 }
 
-// Warn logs a message indicating a warning condition.
+// Warnf logs a message indicating a warning condition.
 // Please refer to Error() for how to use this method.
 func (l *Logger) Warnf(format string, a ...interface{}) {
 	l.Logf(LevelWarn, format, a...)
 }
 
-// Info logs a message for informational purpose.
+// Infof logs a message for informational purpose.
 // Please refer to Error() for how to use this method.
 func (l *Logger) Infof(format string, a ...interface{}) {
 	l.Logf(LevelInfo, format, a...)
 }
 
-// Debug logs a message for debugging purpose.
+// Debugf logs a message for debugging purpose.
 // Please refer to Error() for how to use this method.
 func (l *Logger) Debugf(format string, a ...interface{}) {
 	l.Logf(LevelDebug, format, a...)
