@@ -10,8 +10,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-
-	"github.com/mattn/go-colorable"
 )
 
 type consoleBrush func(string) string
@@ -57,8 +55,7 @@ func (t *ConsoleTarget) Open(io.Writer) error {
 		return errors.New("ConsoleTarget.Writer cannot be nil")
 	}
 	if runtime.GOOS == "windows" {
-		//t.ColorMode = false
-		t.Writer = colorable.NewColorableStdout()
+		t.ColorMode = false
 	}
 	return nil
 }
