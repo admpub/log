@@ -124,6 +124,8 @@ func NewLogger(args ...string) *Logger {
 	if len(args) > 0 {
 		category = args[0]
 	}
+	logger.Targets = append(logger.Targets, NewConsoleTarget())
+	logger.Open()
 	return &Logger{logger, category, DefaultFormatter}
 }
 
