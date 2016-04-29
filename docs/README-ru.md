@@ -1,4 +1,4 @@
-# ozzo-log
+# log
 
 [![GoDoc](https://godoc.org/github.com/admpub/log?status.png)](http://godoc.org/github.com/admpub/log)
 [![Build Status](https://travis-ci.org/admpub/log.svg?branch=master)](https://travis-ci.org/admpub/log)
