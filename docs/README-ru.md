@@ -1,10 +1,10 @@
 # ozzo-log
 
-[![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-log?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-log)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-log.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-log)
-[![Coverage](http://gocover.io/_badge/github.com/go-ozzo/ozzo-log)](http://gocover.io/github.com/go-ozzo/ozzo-log)
+[![GoDoc](https://godoc.org/github.com/admpub/log?status.png)](http://godoc.org/github.com/admpub/log)
+[![Build Status](https://travis-ci.org/admpub/log.svg?branch=master)](https://travis-ci.org/admpub/log)
+[![Coverage](http://gocover.io/_badge/github.com/admpub/log)](http://gocover.io/github.com/admpub/log)
 
-ozzo-log это Go-пакет предоставляющий расширенную поддержку логирования для Go программ. Он имеет следующие свойства:
+log это Go-пакет предоставляющий расширенную поддержку логирования для Go программ. Он имеет следующие свойства:
 
 * Высокую производительность за счет применения асинхронного логирования;
 * Логирование сообщений с различными уровнями важности;
@@ -24,7 +24,7 @@ Go 1.2 или выше.
 Выполните данные команды для установки:
 
 ```
-go get github.com/go-ozzo/ozzo-log
+go get github.com/admpub/log
 ```
 
 ## С чего начать
@@ -35,7 +35,7 @@ go get github.com/go-ozzo/ozzo-log
 package main
 
 import (
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 )
 
 func main() {
@@ -201,7 +201,7 @@ package main
 
 import (
 	"github.com/go-ozzo/ozzo-config"
-    "github.com/go-ozzo/ozzo-log"
+    "github.com/admpub/log"
 )
 
 func main() {

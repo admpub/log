@@ -1,8 +1,8 @@
 # ozzo-log
 
-[![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-log?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-log)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-log.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-log)
-[![Coverage](http://gocover.io/_badge/github.com/go-ozzo/ozzo-log)](http://gocover.io/github.com/go-ozzo/ozzo-log)
+[![GoDoc](https://godoc.org/github.com/admpub/log?status.png)](http://godoc.org/github.com/admpub/log)
+[![Build Status](https://travis-ci.org/admpub/log.svg?branch=master)](https://travis-ci.org/admpub/log)
+[![Coverage](http://gocover.io/_badge/github.com/admpub/log)](http://gocover.io/github.com/admpub/log)
 
 ## 其他语言
 
@@ -10,7 +10,7 @@
 
 ## 说明
 
-ozzo-log 是给 Go 程序提供加强型日志功能的 go 包。它支持以下功能：
+log 是给 Go 程序提供加强型日志功能的 go 包。它支持以下功能：
 
 * 通过异步记录实现的高性能
 * 记录消息的严重级别(severity level)
@@ -30,7 +30,7 @@ Go 1.2 或以上。
 执行以下指令安装：
 
 ```
-go get github.com/go-ozzo/ozzo-log
+go get github.com/admpub/log
 ```
 
 ## 准备开始
@@ -41,7 +41,7 @@ go get github.com/go-ozzo/ozzo-log
 package main
 
 import (
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 )
 
 func main() {
@@ -216,7 +216,7 @@ package main
 
 import (
 	"github.com/go-ozzo/ozzo-config"
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 )
 
 func main() {
