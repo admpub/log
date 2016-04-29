@@ -11,7 +11,7 @@
 
 ## Description
 
-ozzo-log is a Go package providing enhanced logging support for Go programs. It has the following features:
+log is a Go package providing enhanced logging support for Go programs. It has the following features:
 
 * High performance through asynchronous logging;
 * Recording message severity levels;
