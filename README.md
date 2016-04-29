@@ -1,9 +1,9 @@
-# ozzo-log
+# log
 
-[![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-log?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-log)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-log.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-log)
-[![Coverage](http://gocover.io/_badge/github.com/go-ozzo/ozzo-log)](http://gocover.io/github.com/go-ozzo/ozzo-log)
-[![Go Report](http://goreportcard.com/badge/go-ozzo/ozzo-log)](http://goreportcard.com/report/go-ozzo/ozzo-log)
+[![GoDoc](https://godoc.org/github.com/admpub/log?status.png)](http://godoc.org/github.com/admpub/log)
+[![Build Status](https://travis-ci.org/admpub/log.svg?branch=master)](https://travis-ci.org/admpub/log)
+[![Coverage](http://gocover.io/_badge/github.com/admpub/log)](http://gocover.io/github.com/admpub/log)
+[![Go Report](http://goreportcard.com/badge/admpub/log)](http://goreportcard.com/report/admpub/log)
 
 ## Other languages
 
@@ -31,7 +31,7 @@ Go 1.2 or above.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-log
+go get github.com/admpub/log
 ```
 
 ## Getting Started
@@ -42,7 +42,7 @@ The following code snippet shows how you can use this package.
 package main
 
 import (
-	"github.com/go-ozzo/ozzo-log"
+	"github.com/admpub/log"
 )
 
 func main() {
@@ -229,7 +229,7 @@ package main
 
 import (
 	"github.com/go-ozzo/ozzo-config"
-    "github.com/go-ozzo/ozzo-log"
+    "github.com/admpub/log"
 )
 
 func main() {
