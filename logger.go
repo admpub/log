@@ -46,6 +46,12 @@ var Levels = map[string]Level{
 	"Fatal": LevelFatal,
 }
 
+func GetLevel(level string) (Level, bool) {
+	level = strings.Title(level)
+	l, y := Levels[level]
+	return l, y
+}
+
 // String returns the string representation of the log level
 func (l Level) String() string {
 	if name, ok := LevelNames[l]; ok {
@@ -126,7 +132,7 @@ func NewLogger(args ...string) *Logger {
 	}
 	logger.Targets = append(logger.Targets, NewConsoleTarget())
 	logger.Open()
-	return &Logger{logger, category, DefaultFormatter}
+	return &Logger{logger, category, NormalFormatter}
 }
 
 func New(args ...string) *Logger {
@@ -145,8 +151,7 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 }
 
 func (l *Logger) SetLevel(level string) {
-	level = strings.Title(level)
-	if le, ok := Levels[level]; ok {
+	if le, ok := GetLevel(level); ok {
 		l.MaxLevel = le
 	}
 }
@@ -316,6 +321,10 @@ func (l *coreLogger) Close() {
 // DefaultFormatter is the default formatter used to format every log message.
 func DefaultFormatter(l *Logger, e *Entry) string {
 	return fmt.Sprintf("%v [%v][%v] %v%v", e.Time.Format(time.RFC3339), e.Level, e.Category, e.Message, e.CallStack)
+}
+
+func NormalFormatter(l *Logger, e *Entry) string {
+	return fmt.Sprintf("%v [%v][%v] %v%v", e.Time.Format(`2006-01-02 15:04:05`), e.Level, e.Category, e.Message, e.CallStack)
 }
 
 // GetCallStack returns the current call stack information as a string.

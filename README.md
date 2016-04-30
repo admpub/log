@@ -199,7 +199,7 @@ target.Categories = []string{"system.db.*", "app.*"}
 
 When an application is deployed for production, a common need is to allow changing
 the logging configuration of the application without recompiling its source code.
-ozzo-log is designed with this in mind.
+log is designed with this in mind.
 
 For example, you can use a JSON file to specify how the application and its
 logger should be configured:
