@@ -145,6 +145,7 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 }
 
 func (l *Logger) SetLevel(level string) {
+	level = strings.Title(level)
 	if le, ok := Levels[level]; ok {
 		l.MaxLevel = le
 	}
