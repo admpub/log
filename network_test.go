@@ -64,7 +64,7 @@ func TestNetworkTarget(t *testing.T) {
 	target.Network = network
 	target.Address = address
 	target.Categories = []string{"system.*"}
-	logger.Targets = append(logger.Targets, target)
+	logger.SetTarget(target)
 	logger.Open()
 
 	logger.Infof("t1: %v", 2)
