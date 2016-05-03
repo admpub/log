@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+	"time"
 )
 
 // FileTarget writes filtered log messages to a file.
@@ -31,6 +33,8 @@ type FileTarget struct {
 	currentBytes int64
 	errWriter    io.Writer
 	close        chan bool
+	timeFormat   string
+	openedFile   string
 }
 
 // NewFileTarget creates a FileTarget.
@@ -50,8 +54,24 @@ func NewFileTarget() *FileTarget {
 // Open prepares FileTarget for processing log messages.
 func (t *FileTarget) Open(errWriter io.Writer) error {
 	t.Filter.Init()
-	if t.FileName == "" {
+	if t.FileName == `` {
 		return errors.New("FileTarget.FileName must be set")
+	}
+	t.timeFormat = ``
+	t.openedFile = ``
+	p := strings.Index(t.FileName, `{date:`)
+	if p > -1 {
+		fileName := t.FileName[0:p]
+		placeholder := t.FileName[p+6:]
+		p2 := strings.Index(placeholder, `}`)
+		if p2 > -1 {
+			t.timeFormat = placeholder[0:p2]
+			fileName += `%v` + placeholder[p2+1:]
+		}
+		t.FileName = fileName
+		if t.FileName == `` {
+			return errors.New("FileTarget.FileName must be set")
+		}
 	}
 	if t.Rotate {
 		if t.BackupCount < 0 {
@@ -61,8 +81,8 @@ func (t *FileTarget) Open(errWriter io.Writer) error {
 			return errors.New("FileTarget.MaxBytes must be no less than 0")
 		}
 	}
-
-	fd, err := os.OpenFile(t.FileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	t.openedFile = t.fileName()
+	fd, err := os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
 	}
@@ -93,21 +113,32 @@ func (t *FileTarget) Process(e *Entry) {
 
 // Close closes the file target.
 func (t *FileTarget) Close() {
+	if t.fd != nil {
+		t.fd.Close()
+	}
 	<-t.close
 }
 
+func (t *FileTarget) fileName() string {
+	if t.timeFormat != `` {
+		return fmt.Sprintf(t.FileName, time.Now().Format(t.timeFormat))
+	}
+	return t.FileName
+}
+
 func (t *FileTarget) rotate(bytes int64) {
-	if t.currentBytes+bytes <= t.MaxBytes || bytes > t.MaxBytes {
+	fileName := t.fileName()
+	if t.openedFile == fileName && (t.currentBytes+bytes <= t.MaxBytes || bytes > t.MaxBytes) {
 		return
 	}
 	t.fd.Close()
 	t.currentBytes = 0
 
 	var err error
-	for i := t.BackupCount; i >= 0; i++ {
-		path := t.FileName
+	for i := t.BackupCount; i >= 0; i-- {
+		path := fileName
 		if i > 0 {
-			path = fmt.Sprintf("%v.%v", t.FileName, i)
+			path = fmt.Sprintf("%v.%v", fileName, i)
 		}
 		if _, err = os.Lstat(path); err != nil {
 			// file not exists
@@ -116,12 +147,13 @@ func (t *FileTarget) rotate(bytes int64) {
 		if i == t.BackupCount {
 			os.Remove(path)
 		} else {
-			os.Rename(path, fmt.Sprintf("%v.%v", t.FileName, i+1))
+			os.Rename(path, fmt.Sprintf("%v.%v", fileName, i+1))
 		}
 	}
-	t.fd, err = os.OpenFile(t.FileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	t.fd, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		t.fd = nil
 		fmt.Fprintf(t.errWriter, "FileTarget was unable to create a log file: %v", err)
 	}
+	t.openedFile = fileName
 }
