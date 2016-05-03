@@ -9,8 +9,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/admpub/queueChan"
 )
 
 // FileTarget writes filtered log messages to a file.
@@ -35,6 +38,9 @@ type FileTarget struct {
 	close        chan bool
 	timeFormat   string
 	openedFile   string
+	scaned       bool
+	filePrefix   string
+	queue        queueChan.QueueChan
 }
 
 // NewFileTarget creates a FileTarget.
@@ -52,7 +58,7 @@ func NewFileTarget() *FileTarget {
 }
 
 // Open prepares FileTarget for processing log messages.
-func (t *FileTarget) Open(errWriter io.Writer) error {
+func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 	t.Filter.Init()
 	if t.FileName == `` {
 		return errors.New("FileTarget.FileName must be set")
@@ -60,8 +66,10 @@ func (t *FileTarget) Open(errWriter io.Writer) error {
 	t.timeFormat = ``
 	t.openedFile = ``
 	p := strings.Index(t.FileName, `{date:`)
+	t.filePrefix = t.FileName
 	if p > -1 {
 		fileName := t.FileName[0:p]
+		t.filePrefix = fileName
 		placeholder := t.FileName[p+6:]
 		p2 := strings.Index(placeholder, `}`)
 		if p2 > -1 {
@@ -73,6 +81,12 @@ func (t *FileTarget) Open(errWriter io.Writer) error {
 			return errors.New("FileTarget.FileName must be set")
 		}
 	}
+	if t.filePrefix, err = filepath.Abs(t.filePrefix); err != nil {
+		return err
+	}
+	if t.FileName, err = filepath.Abs(t.FileName); err != nil {
+		return err
+	}
 	if t.Rotate {
 		if t.BackupCount < 0 {
 			return errors.New("FileTarget.BackupCount must be no less than 0")
@@ -80,15 +94,15 @@ func (t *FileTarget) Open(errWriter io.Writer) error {
 		if t.MaxBytes <= 0 {
 			return errors.New("FileTarget.MaxBytes must be no less than 0")
 		}
+		t.queue = queueChan.New(t.BackupCount)
+		t.queue.Dynamic()
 	}
 	t.openedFile = t.fileName()
-	fd, err := os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	t.fd, err = os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
 	}
-	t.fd = fd
 	t.errWriter = errWriter
-
 	return nil
 }
 
@@ -134,23 +148,53 @@ func (t *FileTarget) rotate(bytes int64) {
 	}
 	t.fd.Close()
 	t.currentBytes = 0
-
-	var err error
-	for i := t.BackupCount; i >= 0; i-- {
-		path := fileName
-		if i > 0 {
-			path = fmt.Sprintf("%v.%v", fileName, i)
-		}
-		if _, err = os.Lstat(path); err != nil {
-			// file not exists
-			continue
-		}
-		if i == t.BackupCount {
-			os.Remove(path)
-		} else {
-			os.Rename(path, fmt.Sprintf("%v.%v", fileName, i+1))
+	if !t.scaned {
+		t.scaned = true
+		err := filepath.Walk(filepath.Dir(t.filePrefix), func(f string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() || f == t.filePrefix {
+				return nil
+			}
+			if strings.HasPrefix(f, t.filePrefix) {
+				t.queue.PushTS(f)
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Fprintf(t.errWriter, `%v`, err)
 		}
 	}
+	var err error
+	if t.queue.Length() > 0 && t.queue.Length() >= t.BackupCount {
+		if path, ok := t.queue.PopTS().(string); ok {
+			if err = os.Remove(path); err != nil {
+				fmt.Fprintf(t.errWriter, `%v`, err)
+			}
+		}
+	} else {
+		newPath := fileName + `.` + time.Now().Format(`20060102150405`)
+		os.Rename(t.openedFile, newPath)
+		t.queue.PushTS(newPath)
+	}
+	/*
+		for i := t.BackupCount; i >= 0; i-- {
+			path := fileName
+			if i > 0 {
+				path = fmt.Sprintf("%v.%v", fileName, i)
+			}
+			if _, err = os.Lstat(path); err != nil {
+				// file not exists
+				continue
+			}
+			if i == t.BackupCount {
+				os.Remove(path)
+			} else {
+				os.Rename(path, fmt.Sprintf("%v.%v", fileName, i+1))
+			}
+		}
+	*/
 	t.fd, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		t.fd = nil
