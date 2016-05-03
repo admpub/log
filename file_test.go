@@ -36,7 +36,7 @@ func TestFileTarget(t *testing.T) {
 	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.Categories = []string{"system.*"}
-	logger.Targets = append(logger.Targets, target)
+	logger.SetTarget(target)
 	logger.Open()
 	logger.Infof("t1: %v", 2)
 	logger.GetLogger("system.db").Infof("t2: %v", 3)

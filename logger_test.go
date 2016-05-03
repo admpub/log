@@ -73,11 +73,11 @@ func TestLoggerLog(t *testing.T) {
 	target := &MemoryTarget{
 		ready: make(chan bool, 0),
 	}
-	logger.Targets = append(logger.Targets, target)
-
+	logger.SetTarget()
 	if target.open {
 		t.Errorf("target.open = %v, expected %v", target.open, false)
 	}
+	logger.SetTarget(target)
 	logger.Open()
 	if !target.open {
 		t.Errorf("target.open = %v, expected %v", target.open, true)
@@ -140,6 +140,7 @@ func TestLoggerConfig(t *testing.T) {
 		return &MemoryTarget{Option2: true}
 	})
 	logger := log.NewLogger()
+	logger.SetTarget()
 
 	if err := c.Configure(logger, "Logger"); err != nil {
 		t.Errorf("config.Configure(logger): %v", err)

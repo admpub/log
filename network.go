@@ -91,6 +91,10 @@ func (t *NetworkTarget) Process(e *Entry) {
 // Close closes the network target.
 func (t *NetworkTarget) Close() {
 	<-t.close
+	if t.conn != nil {
+		t.conn.Close()
+		t.conn = nil
+	}
 }
 
 func (t *NetworkTarget) connect() error {

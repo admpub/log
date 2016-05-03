@@ -67,8 +67,8 @@ func TestNetworkTarget(t *testing.T) {
 	logger.Targets = append(logger.Targets, target)
 	logger.Open()
 
-	logger.Info("t1: %v", 2)
-	logger.GetLogger("system.db").Info("t2: %v", 3)
+	logger.Infof("t1: %v", 2)
+	logger.GetLogger("system.db").Infof("t2: %v", 3)
 
 	logger.Close()
 

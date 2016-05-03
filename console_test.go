@@ -53,8 +53,7 @@ func TestConsoleTarget(t *testing.T) {
 	writer := &MemoryWriter{}
 	target.Writer = writer
 	target.Categories = []string{"system.*"}
-	logger.Targets = append(logger.Targets, target)
-	logger.Open()
+	logger.SetTarget(target)
 
 	logger.Infof("t1: %v", 2)
 	logger.GetLogger("system.db").Infof("t2: %v", 3)

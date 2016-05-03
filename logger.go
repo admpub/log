@@ -150,6 +150,22 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return &Logger{l.coreLogger, category, l.Formatter}
 }
 
+func (l *Logger) SetTarget(targets ...Target) {
+	l.Close()
+	if len(targets) > 0 {
+		l.Targets = targets
+		l.Open()
+	} else {
+		l.Targets = []Target{}
+	}
+}
+
+func (l *Logger) AddTarget(targets ...Target) {
+	l.Close()
+	l.Targets = append(l.Targets, targets...)
+	l.Open()
+}
+
 func (l *Logger) SetLevel(level string) {
 	if le, ok := GetLevel(level); ok {
 		l.MaxLevel = le

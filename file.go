@@ -113,10 +113,11 @@ func (t *FileTarget) Process(e *Entry) {
 
 // Close closes the file target.
 func (t *FileTarget) Close() {
+	<-t.close
 	if t.fd != nil {
 		t.fd.Close()
+		t.fd = nil
 	}
-	<-t.close
 }
 
 func (t *FileTarget) fileName() string {
