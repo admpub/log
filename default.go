@@ -1,63 +1,63 @@
 package log
 
-var defaultLog = &defaultLogger{Logger: New()}
+var DefaultLog = &defaultLogger{Logger: New()}
 
 type defaultLogger struct {
 	*Logger
 }
 
 func GetLogger(category string, formatter ...Formatter) *Logger {
-	return defaultLog.GetLogger(category, formatter...)
+	return DefaultLog.GetLogger(category, formatter...)
 }
 
 func SetTarget(targets ...Target) {
-	defaultLog.SetTarget(targets...)
+	DefaultLog.SetTarget(targets...)
 }
 
 func AddTarget(targets ...Target) {
-	defaultLog.AddTarget(targets...)
+	DefaultLog.AddTarget(targets...)
 }
 
 func SetLevel(level string) {
-	defaultLog.SetLevel(level)
+	DefaultLog.SetLevel(level)
 }
 
 func Fatalf(format string, a ...interface{}) {
-	defaultLog.Fatalf(format, a...)
+	DefaultLog.Fatalf(format, a...)
 }
 
 func Errorf(format string, a ...interface{}) {
-	defaultLog.Errorf(format, a...)
+	DefaultLog.Errorf(format, a...)
 }
 
 func Warnf(format string, a ...interface{}) {
-	defaultLog.Warnf(format, a...)
+	DefaultLog.Warnf(format, a...)
 }
 
 func Infof(format string, a ...interface{}) {
-	defaultLog.Infof(format, a...)
+	DefaultLog.Infof(format, a...)
 }
 
 func Debugf(format string, a ...interface{}) {
-	defaultLog.Debugf(format, a...)
+	DefaultLog.Debugf(format, a...)
 }
 
 func Fatal(a ...interface{}) {
-	defaultLog.Fatal(a...)
+	DefaultLog.Fatal(a...)
 }
 
 func Error(a ...interface{}) {
-	defaultLog.Error(a...)
+	DefaultLog.Error(a...)
 }
 
 func Warn(a ...interface{}) {
-	defaultLog.Warn(a...)
+	DefaultLog.Warn(a...)
 }
 
 func Info(a ...interface{}) {
-	defaultLog.Info(a...)
+	DefaultLog.Info(a...)
 }
 
 func Debug(a ...interface{}) {
-	defaultLog.Debug(a...)
+	DefaultLog.Debug(a...)
 }
