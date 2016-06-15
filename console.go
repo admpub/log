@@ -31,9 +31,10 @@ var brushes = map[Level]consoleBrush{
 // ConsoleTarget writes filtered log messages to console window.
 type ConsoleTarget struct {
 	*Filter
-	ColorMode bool      // whether to use colors to differentiate log levels
-	Writer    io.Writer // the writer to write log messages
-	close     chan bool
+	ColorMode    bool      // whether to use colors to differentiate log levels
+	Writer       io.Writer // the writer to write log messages
+	close        chan bool
+	ColorStrFunc func(Level) string
 }
 
 // NewConsoleTarget creates a ConsoleTarget.
@@ -45,6 +46,9 @@ func NewConsoleTarget() *ConsoleTarget {
 		ColorMode: true,
 		Writer:    colorable.NewColorableStdout(),
 		close:     make(chan bool, 0),
+		ColorStrFunc: func(_ Level) string {
+			return `●`
+		},
 	}
 }
 
@@ -68,19 +72,22 @@ func (t *ConsoleTarget) Process(e *Entry) {
 	}
 	var msg string
 	if t.ColorMode {
-		msg = t.Colored(e)
+		msg = t.Colored(e.Level, e.String())
 	} else {
 		msg = e.String()
 	}
 	fmt.Fprintln(t.Writer, msg)
 }
 
-func (t *ConsoleTarget) Colored(e *Entry) string {
-	brush, ok := brushes[e.Level]
+func (t *ConsoleTarget) Colored(level Level, msg string) string {
+	brush, ok := brushes[level]
 	if ok {
-		return brush(`●`) + e.String()
+		if t.ColorStrFunc != nil {
+			return brush(t.ColorStrFunc(level)) + msg
+		}
+		return brush(msg)
 	}
-	return e.String()
+	return msg
 }
 
 // Close closes the console target.
