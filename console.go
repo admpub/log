@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"runtime"
+
+	"github.com/mattn/go-colorable"
 )
 
 type consoleBrush func(string) string
@@ -21,7 +21,7 @@ func newConsoleBrush(format string) consoleBrush {
 }
 
 var brushes = map[Level]consoleBrush{
-	LevelDebug: newConsoleBrush("39"), // default
+	LevelDebug: newConsoleBrush("34"), // blue
 	LevelInfo:  newConsoleBrush("32"), // green
 	LevelWarn:  newConsoleBrush("33"), // yellow
 	LevelError: newConsoleBrush("31"), // red
@@ -43,7 +43,7 @@ func NewConsoleTarget() *ConsoleTarget {
 	return &ConsoleTarget{
 		Filter:    &Filter{MaxLevel: LevelDebug},
 		ColorMode: true,
-		Writer:    os.Stdout,
+		Writer:    colorable.NewColorableStdout(),
 		close:     make(chan bool, 0),
 	}
 }
@@ -53,9 +53,6 @@ func (t *ConsoleTarget) Open(io.Writer) error {
 	t.Filter.Init()
 	if t.Writer == nil {
 		return errors.New("ConsoleTarget.Writer cannot be nil")
-	}
-	if runtime.GOOS == "windows" {
-		t.ColorMode = false
 	}
 	return nil
 }
@@ -69,14 +66,21 @@ func (t *ConsoleTarget) Process(e *Entry) {
 	if !t.Allow(e) {
 		return
 	}
-	msg := e.String()
+	var msg string
 	if t.ColorMode {
-		brush, ok := brushes[e.Level]
-		if ok {
-			msg = brush(msg)
-		}
+		msg = t.Colored(e)
+	} else {
+		msg = e.String()
 	}
 	fmt.Fprintln(t.Writer, msg)
+}
+
+func (t *ConsoleTarget) Colored(e *Entry) string {
+	brush, ok := brushes[e.Level]
+	if ok {
+		return brush(`●`) + e.String()
+	}
+	return e.String()
 }
 
 // Close closes the console target.
