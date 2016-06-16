@@ -103,6 +103,7 @@ type coreLogger struct {
 	CallStackFilter string    // a substring that a call stack frame file path should contain in order for the frame to be counted
 	MaxLevel        Level     // the maximum level of messages to be logged
 	Targets         []Target  // targets for sending log messages to
+	SyncMode        bool      // Whether the use of non-asynchronous mode （是否使用非异步模式）
 }
 
 // Formatter formats a log message into an appropriate string.
@@ -132,7 +133,11 @@ func NewLogger(args ...string) *Logger {
 	}
 	logger.Targets = append(logger.Targets, NewConsoleTarget())
 	logger.Open()
-	return &Logger{logger, category, NormalFormatter}
+	return &Logger{
+		coreLogger: logger,
+		Category:   category,
+		Formatter:  NormalFormatter,
+	}
 }
 
 func New(args ...string) *Logger {
@@ -145,9 +150,17 @@ func New(args ...string) *Logger {
 // It will be used to format all messages logged through this logger.
 func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	if len(formatter) > 0 {
-		return &Logger{l.coreLogger, category, formatter[0]}
+		return &Logger{
+			coreLogger: l.coreLogger,
+			Category:   category,
+			Formatter:  formatter[0],
+		}
 	}
-	return &Logger{l.coreLogger, category, l.Formatter}
+	return &Logger{
+		coreLogger: l.coreLogger,
+		Category:   category,
+		Formatter:  l.Formatter,
+	}
 }
 
 func (l *Logger) SetTarget(targets ...Target) {
@@ -265,7 +278,11 @@ func (l *Logger) newEntry(level Level, message string) {
 		entry.CallStack = GetCallStack(3, l.CallStackDepth, l.CallStackFilter)
 	}
 	entry.FormattedMessage = l.Formatter(l, entry)
-	l.entries <- entry
+	if l.SyncMode {
+		l.syncProcess(entry)
+	} else {
+		l.entries <- entry
+	}
 }
 
 // Open prepares the logger and the targets for logging purpose.
@@ -316,6 +333,15 @@ func (l *coreLogger) process() {
 		if entry == nil {
 			break
 		}
+	}
+}
+
+func (l *coreLogger) syncProcess(entry *Entry) {
+	if entry == nil {
+		return
+	}
+	for _, target := range l.Targets {
+		target.Process(entry)
 	}
 }
 
