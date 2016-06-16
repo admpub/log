@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/mattn/go-colorable"
+	"os"
+	"runtime"
 )
 
 type consoleBrush func(string) string
@@ -44,7 +44,7 @@ func NewConsoleTarget() *ConsoleTarget {
 	return &ConsoleTarget{
 		Filter:    &Filter{MaxLevel: LevelDebug},
 		ColorMode: true,
-		Writer:    colorable.NewColorableStdout(),
+		Writer:    os.Stdout,
 		close:     make(chan bool, 0),
 		ColorStrFunc: func(_ Level) string {
 			return `●`
@@ -57,6 +57,9 @@ func (t *ConsoleTarget) Open(io.Writer) error {
 	t.Filter.Init()
 	if t.Writer == nil {
 		return errors.New("ConsoleTarget.Writer cannot be nil")
+	}
+	if runtime.GOOS == `windows` {
+		t.ColorMode = false
 	}
 	return nil
 }
