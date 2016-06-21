@@ -29,10 +29,9 @@ var colorBrushes = map[Level]colorSetting{
 // ConsoleTarget writes filtered log messages to console window.
 type ConsoleTarget struct {
 	*Filter
-	ColorMode    bool      // whether to use colors to differentiate log levels
-	Writer       io.Writer // the writer to write log messages
-	close        chan bool
-	ColorStrFunc func(Level) string
+	ColorMode bool      // whether to use colors to differentiate log levels
+	Writer    io.Writer // the writer to write log messages
+	close     chan bool
 }
 
 // NewConsoleTarget creates a ConsoleTarget.
