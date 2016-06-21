@@ -9,23 +9,21 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
+
+	ct "github.com/admpub/go-colortext"
 )
 
-type consoleBrush func(string) string
-
-func newConsoleBrush(format string) consoleBrush {
-	return func(text string) string {
-		return "\033[" + format + "m" + text + "\033[0m"
-	}
+type colorSetting struct {
+	Color  ct.Color
+	Bright bool
 }
 
-var brushes = map[Level]consoleBrush{
-	LevelDebug: newConsoleBrush("34"), // blue
-	LevelInfo:  newConsoleBrush("32"), // green
-	LevelWarn:  newConsoleBrush("33"), // yellow
-	LevelError: newConsoleBrush("31"), // red
-	LevelFatal: newConsoleBrush("35"), // magenta
+var colorBrushes = map[Level]colorSetting{
+	LevelDebug: colorSetting{ct.White, false},  // white
+	LevelInfo:  colorSetting{ct.Green, true},   // green
+	LevelWarn:  colorSetting{ct.Yellow, true},  // yellow
+	LevelError: colorSetting{ct.Red, true},     // red
+	LevelFatal: colorSetting{ct.Magenta, true}, // magenta
 }
 
 // ConsoleTarget writes filtered log messages to console window.
@@ -46,9 +44,6 @@ func NewConsoleTarget() *ConsoleTarget {
 		ColorMode: true,
 		Writer:    os.Stdout,
 		close:     make(chan bool, 0),
-		ColorStrFunc: func(_ Level) string {
-			return `●`
-		},
 	}
 }
 
@@ -57,9 +52,6 @@ func (t *ConsoleTarget) Open(io.Writer) error {
 	t.Filter.Init()
 	if t.Writer == nil {
 		return errors.New("ConsoleTarget.Writer cannot be nil")
-	}
-	if runtime.GOOS == `windows` {
-		t.ColorMode = false
 	}
 	return nil
 }
@@ -73,24 +65,21 @@ func (t *ConsoleTarget) Process(e *Entry) {
 	if !t.Allow(e) {
 		return
 	}
-	var msg string
+	msg := e.String()
 	if t.ColorMode {
-		msg = t.Colored(e.Level, e.String())
-	} else {
-		msg = e.String()
+		if t.Colorize(e.Level) {
+			defer ct.ResetColor()
+		}
 	}
 	fmt.Fprintln(t.Writer, msg)
 }
 
-func (t *ConsoleTarget) Colored(level Level, msg string) string {
-	brush, ok := brushes[level]
+func (t *ConsoleTarget) Colorize(level Level) bool {
+	cs, ok := colorBrushes[level]
 	if ok {
-		if t.ColorStrFunc != nil {
-			return brush(t.ColorStrFunc(level)) + msg
-		}
-		return brush(msg)
+		ct.Foreground(cs.Color, cs.Bright)
 	}
-	return msg
+	return ok
 }
 
 // Close closes the console target.
