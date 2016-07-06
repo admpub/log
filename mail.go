@@ -57,6 +57,10 @@ func (t *MailTarget) Open(errWriter io.Writer) error {
 	if len(t.Recipients) == 0 {
 		return errors.New("MailTarget.Recipients must be specified")
 	}
+	if t.BufferSize < 0 {
+		return errors.New("MailTarget.BufferSize must be no less than 0")
+	}
+	t.entries = make(chan *Entry, t.BufferSize)
 
 	go t.sendMessages(errWriter)
 
