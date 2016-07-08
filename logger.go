@@ -362,11 +362,11 @@ func (l *coreLogger) Close() {
 
 // DefaultFormatter is the default formatter used to format every log message.
 func DefaultFormatter(l *Logger, e *Entry) string {
-	return fmt.Sprintf("%v [%v][%v] %v%v", e.Time.Format(time.RFC3339), e.Level, e.Category, e.Message, e.CallStack)
+	return fmt.Sprintf("%v|%v|%v|%v%v", e.Time.Format(time.RFC3339), e.Level, e.Category, e.Message, e.CallStack)
 }
 
 func NormalFormatter(l *Logger, e *Entry) string {
-	return fmt.Sprintf("%v [%v][%v] %v%v", e.Time.Format(`2006-01-02 15:04:05`), e.Level, e.Category, e.Message, e.CallStack)
+	return fmt.Sprintf("%v|%v|%v|%v%v", e.Time.Format(`2006-01-02 15:04:05`), e.Level, e.Category, e.Message, e.CallStack)
 }
 
 // GetCallStack returns the current call stack information as a string.
