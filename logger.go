@@ -326,13 +326,14 @@ func (l *coreLogger) Open() error {
 // process sends the messages to targets for processing.
 func (l *coreLogger) process() {
 	for {
-		entry := <-l.entries
-		for _, target := range l.Targets {
-			target.Process(entry)
+		entry, ok := <-l.entries
+		if ok && entry != nil {
+			for _, target := range l.Targets {
+				target.Process(entry)
+			}
+			continue
 		}
-		if entry == nil {
-			break
-		}
+		break
 	}
 }
 
