@@ -10,6 +10,10 @@ func GetLogger(category string, formatter ...Formatter) *Logger {
 	return DefaultLog.GetLogger(category, formatter...)
 }
 
+func Sync(args ...bool) {
+	DefaultLog.Sync(args...)
+}
+
 func SetTarget(targets ...Target) {
 	DefaultLog.SetTarget(targets...)
 }

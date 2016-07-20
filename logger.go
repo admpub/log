@@ -163,6 +163,14 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	}
 }
 
+func (l *Logger) Sync(args ...bool) {
+	if len(args) < 1 {
+		l.SyncMode = true
+		return
+	}
+	l.SyncMode = args[0]
+}
+
 func (l *Logger) SetTarget(targets ...Target) {
 	l.Close()
 	if len(targets) > 0 {
