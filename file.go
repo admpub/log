@@ -69,9 +69,17 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 	t.filePrefix = t.FileName
 	if p > -1 {
 		fileName := t.FileName[0:p]
+		if p == 0 {
+			fileName = "./"
+		}
 		t.filePrefix = fileName
 		placeholder := t.FileName[p+6:]
 		p2 := strings.Index(placeholder, `}`)
+
+		if fileName, err = filepath.Abs(fileName); err != nil {
+			return err
+		}
+
 		if p2 > -1 {
 			t.timeFormat = placeholder[0:p2]
 			fileName += `%v` + placeholder[p2+1:]
@@ -80,13 +88,16 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		if t.FileName == `` {
 			return errors.New("FileTarget.FileName must be set")
 		}
+		if t.filePrefix, err = filepath.Abs(t.filePrefix); err != nil {
+			return err
+		}
+	} else {
+		if t.filePrefix, err = filepath.Abs(t.filePrefix); err != nil {
+			return err
+		}
+		t.FileName = t.filePrefix
 	}
-	if t.filePrefix, err = filepath.Abs(t.filePrefix); err != nil {
-		return err
-	}
-	if t.FileName, err = filepath.Abs(t.FileName); err != nil {
-		return err
-	}
+
 	if t.Rotate {
 		if t.BackupCount < 0 {
 			return errors.New("FileTarget.BackupCount must be no less than 0")
@@ -98,6 +109,7 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		t.queue.Dynamic()
 	}
 	t.openedFile = t.fileName()
+	t.createDir(t.openedFile)
 	t.fd, err = os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
@@ -163,14 +175,14 @@ func (t *FileTarget) rotate(bytes int64) {
 			return nil
 		})
 		if err != nil {
-			fmt.Fprintf(t.errWriter, `%v`, err)
+			fmt.Fprintf(t.errWriter, "%v\n", err)
 		}
 	}
 	var err error
 	if t.queue.Length() > 0 && t.queue.Length() >= t.BackupCount {
 		if path, ok := t.queue.PopTS().(string); ok {
 			if err = os.Remove(path); err != nil {
-				fmt.Fprintf(t.errWriter, `%v`, err)
+				fmt.Fprintf(t.errWriter, "%v\n", err)
 			}
 		}
 	} else {
@@ -195,10 +207,21 @@ func (t *FileTarget) rotate(bytes int64) {
 			}
 		}
 	*/
+	t.createDir(fileName)
 	t.fd, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		t.fd = nil
-		fmt.Fprintf(t.errWriter, "FileTarget was unable to create a log file: %v", err)
+		fmt.Fprintf(t.errWriter, "FileTarget was unable to create a log file: %v\n", err)
 	}
 	t.openedFile = fileName
+}
+
+func (t *FileTarget) createDir(fileName string) {
+	fdir := filepath.Dir(fileName)
+	if finf, err := os.Stat(fdir); err != nil || !finf.IsDir() {
+		err := os.MkdirAll(fdir, os.ModePerm)
+		if err != nil {
+			fmt.Fprintf(t.errWriter, "%v\n", err)
+		}
+	}
 }

@@ -334,7 +334,7 @@ func (l *coreLogger) Open() error {
 	var targets []Target
 	for _, target := range l.Targets {
 		if err := target.Open(l.ErrorWriter); err != nil {
-			fmt.Fprintf(l.ErrorWriter, "Failed to open target: %v", err)
+			fmt.Fprintf(l.ErrorWriter, "Failed to open target: %v\n", err)
 		} else {
 			targets = append(targets, target)
 		}
