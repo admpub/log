@@ -66,8 +66,15 @@ type LoggerWriter struct {
 }
 
 func (l *LoggerWriter) Write(p []byte) (n int, err error) {
-	l.Logger.newEntry(l.Level, string(p))
-	return len(p), nil
+	var s string
+	n = len(p)
+	if p[n-1] == '\n' {
+		s = string(p[0 : n-1])
+	} else {
+		s = string(p)
+	}
+	l.Logger.newEntry(l.Level, s)
+	return
 }
 
 // Entry represents a log entry.
