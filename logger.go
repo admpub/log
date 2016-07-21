@@ -60,6 +60,16 @@ func (l Level) String() string {
 	return "Unknown"
 }
 
+type LoggerWriter struct {
+	Level Level
+	*Logger
+}
+
+func (l *LoggerWriter) Write(p []byte) (n int, err error) {
+	l.Logger.newEntry(l.Level, string(p))
+	return len(p), nil
+}
+
 // Entry represents a log entry.
 type Entry struct {
 	Level     Level
@@ -233,6 +243,13 @@ func (l *Logger) Logf(level Level, format string, a ...interface{}) {
 		message = fmt.Sprintf(format, a...)
 	}
 	l.newEntry(level, message)
+}
+
+func (l *Logger) Writer(level Level) io.Writer {
+	return &LoggerWriter{
+		Level:  level,
+		Logger: l,
+	}
 }
 
 func (l *Logger) Fatal(a ...interface{}) {

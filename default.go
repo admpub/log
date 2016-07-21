@@ -1,5 +1,9 @@
 package log
 
+import (
+	"io"
+)
+
 var DefaultLog = &defaultLogger{Logger: New()}
 
 type defaultLogger struct {
@@ -64,4 +68,8 @@ func Info(a ...interface{}) {
 
 func Debug(a ...interface{}) {
 	DefaultLog.Debug(a...)
+}
+
+func Writer(level Level) io.Writer {
+	return DefaultLog.Writer(level)
 }
