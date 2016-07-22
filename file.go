@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -109,6 +110,7 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		}
 		t.queue = queueChan.New(t.BackupCount)
 		t.queue.Dynamic()
+		t.recordOldLogs()
 	}
 	t.openedFile = t.fileName()
 	t.createDir(t.openedFile)
@@ -116,10 +118,33 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
 	}
-	if t.Rotate {
-		t.recordOldLogs()
-	}
 	return nil
+}
+
+type logFiles []*logFileInfo
+
+type logFileInfo struct {
+	Path  string
+	MTime int64
+}
+
+func (l *logFiles) Add(fpath string, mtime int64) {
+	*l = append(*l, &logFileInfo{
+		Path:  fpath,
+		MTime: mtime,
+	})
+}
+
+func (l *logFiles) Len() int {
+	return len(*l)
+}
+
+func (l *logFiles) Less(i, j int) bool {
+	return (*l)[i].MTime < (*l)[j].MTime
+}
+
+func (l *logFiles) Swap(i, j int) {
+	(*l)[i], (*l)[j] = (*l)[j], (*l)[i]
 }
 
 func (t *FileTarget) recordOldLogs() {
@@ -129,6 +154,8 @@ func (t *FileTarget) recordOldLogs() {
 	}
 
 	t.scaned = true
+
+	files := &logFiles{}
 	err := filepath.Walk(filepath.Dir(t.filePrefix), func(f string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -136,15 +163,20 @@ func (t *FileTarget) recordOldLogs() {
 		if info.IsDir() || f == t.filePrefix {
 			return nil
 		}
+
 		if strings.HasPrefix(f, t.filePrefix) {
-			t.queue.PushTS(f)
+			files.Add(f, info.ModTime().UnixNano())
 		}
 		return nil
 	})
+	sort.Sort(files)
+	for _, f := range *files {
+		t.queue.PushTS(f.Path)
+	}
 	if err != nil {
 		fmt.Fprintf(t.errWriter, "%v\n", err)
 	} else if t.BackupCount > 0 {
-		for t.queue.Length() > t.BackupCount {
+		for t.queue.Length() >= t.BackupCount {
 			if path, ok := t.queue.PopTS().(string); ok {
 				if err = os.Remove(path); err != nil {
 					fmt.Fprintf(t.errWriter, "%v\n", err)
@@ -200,10 +232,23 @@ func (t *FileTarget) rotate(bytes int64) {
 	var err error
 	if t.BackupCount > 0 {
 		for i := t.queue.Length() - t.BackupCount; i >= 0; i-- {
-			if path, ok := t.queue.PopTS().(string); ok {
-				if err = os.Remove(path); err != nil {
-					fmt.Fprintf(t.errWriter, "%v\n", err)
+			path, ok := t.queue.PopTS().(string)
+			if !ok {
+				continue
+			}
+			if path == fileName {
+				t.queue.PushTS(path)
+				if t.queue.Length() > 1 {
+					path, ok = t.queue.PopTS().(string)
+					if !ok {
+						continue
+					}
+				} else {
+					break
 				}
+			}
+			if err = os.Remove(path); err != nil {
+				fmt.Fprintf(t.errWriter, "%v\n", err)
 			}
 		}
 	}
