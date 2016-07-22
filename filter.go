@@ -13,8 +13,9 @@ type Filter struct {
 	catNames    map[string]bool
 	catPrefixes []string
 
-	MaxLevel   Level    // the maximum severity level that is allowed
-	Categories []string // the allowed message categories. Categories can use "*" as a suffix for wildcard matching.
+	MaxLevel   Level          // the maximum severity level that is allowed
+	Levels     map[Level]bool // 此属性被设置时，MaxLevel 无效
+	Categories []string       // the allowed message categories. Categories can use "*" as a suffix for wildcard matching.
 }
 
 // Init initializes the filter.
@@ -29,6 +30,9 @@ func (t *Filter) Init() {
 			t.catNames[cat] = true
 		}
 	}
+	if t.Levels != nil {
+		t.MaxLevel = -1
+	}
 }
 
 // Allow checks if a message meets the severity level and category requirements.
@@ -36,8 +40,14 @@ func (t *Filter) Allow(e *Entry) bool {
 	if e == nil {
 		return true
 	}
-	if e.Level > t.MaxLevel {
-		return false
+	if t.MaxLevel > -1 {
+		if e.Level > t.MaxLevel {
+			return false
+		}
+	} else {
+		if t.Levels == nil || !t.Levels[e.Level] {
+			return false
+		}
 	}
 	if t.catNames[e.Category] {
 		return true
