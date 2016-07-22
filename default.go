@@ -22,6 +22,10 @@ func SetTarget(targets ...Target) {
 	DefaultLog.SetTarget(targets...)
 }
 
+func SetFatalAction(action Action) {
+	DefaultLog.SetFatalAction(action)
+}
+
 func AddTarget(targets ...Target) {
 	DefaultLog.AddTarget(targets...)
 }

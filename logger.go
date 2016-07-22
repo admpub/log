@@ -26,8 +26,15 @@ const (
 	LevelDebug
 )
 
+const (
+	ActionNothing Action = iota
+	ActionPanic
+	ActionExit
+)
+
 // Level describes the level of a log message.
 type Level int
+type Action int
 
 // LevelNames maps log levels to names
 var LevelNames = map[Level]string{
@@ -110,9 +117,11 @@ type Target interface {
 
 // coreLogger maintains the log messages in a channel and sends them to various targets.
 type coreLogger struct {
-	lock    sync.Mutex
-	open    bool        // whether the logger is open
-	entries chan *Entry // log entries
+	lock        sync.Mutex
+	open        bool        // whether the logger is open
+	entries     chan *Entry // log entries
+	goroutines  int
+	fatalAction Action
 
 	ErrorWriter     io.Writer // the writer used to write errors caused by log targets
 	BufferSize      int       // the size of the channel storing log entries
@@ -196,6 +205,10 @@ func (l *Logger) SetTarget(targets ...Target) {
 	} else {
 		l.Targets = []Target{}
 	}
+}
+
+func (l *Logger) SetFatalAction(action Action) {
+	l.fatalAction = action
 }
 
 func (l *Logger) AddTarget(targets ...Target) {
@@ -300,6 +313,10 @@ func (l *Logger) Log(level Level, a ...interface{}) {
 
 // Log logs a message of a specified severity level.
 func (l *Logger) newEntry(level Level, message string) {
+	if level == LevelFatal {
+		l.newFatalEntry(level, message)
+		return
+	}
 	entry := &Entry{
 		Category: l.Category,
 		Level:    level,
@@ -313,7 +330,52 @@ func (l *Logger) newEntry(level Level, message string) {
 	if l.SyncMode {
 		l.syncProcess(entry)
 	} else {
+		l.goroutines++
 		l.entries <- entry
+	}
+}
+
+func (l *Logger) newFatalEntry(level Level, message string) {
+	entry := &Entry{
+		Category: l.Category,
+		Level:    level,
+		Message:  message,
+		Time:     time.Now(),
+	}
+	stackDepth := l.CallStackDepth
+	if stackDepth == 0 {
+		stackDepth = 20
+	}
+	entry.CallStack = GetCallStack(3, stackDepth, l.CallStackFilter)
+	entry.FormattedMessage = l.Formatter(l, entry)
+	l.syncProcess(entry)
+	if l.SyncMode {
+		l.syncProcess(entry)
+	} else {
+		l.goroutines++
+		l.entries <- entry
+	}
+
+	for {
+		//fmt.Println(`waiting ...`, l.goroutines)
+		if l.goroutines <= 0 {
+			switch l.fatalAction {
+			case ActionPanic:
+				panic(`Fatal error.`)
+			case ActionExit:
+				entry := &Entry{
+					Category: l.Category,
+					Level:    LevelWarn,
+					Message:  `Forced to exit.`,
+					Time:     time.Now(),
+				}
+				entry.FormattedMessage = l.Formatter(l, entry)
+				l.syncProcess(entry)
+				os.Exit(-1)
+			}
+			break
+		}
+		time.Sleep(time.Duration(l.goroutines) * time.Microsecond)
 	}
 }
 
@@ -362,6 +424,9 @@ func (l *coreLogger) process() {
 		for _, target := range l.Targets {
 			target.Process(entry)
 		}
+
+		l.goroutines--
+
 		if entry == nil {
 			break
 		}
