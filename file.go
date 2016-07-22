@@ -98,6 +98,8 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		t.FileName = t.filePrefix
 	}
 
+	t.errWriter = errWriter
+
 	if t.Rotate {
 		if t.BackupCount < 0 {
 			return errors.New("FileTarget.BackupCount must be no less than 0")
@@ -114,8 +116,43 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
 	}
-	t.errWriter = errWriter
+	if t.Rotate {
+		t.recordOldLogs()
+	}
 	return nil
+}
+
+func (t *FileTarget) recordOldLogs() {
+
+	if t.scaned {
+		return
+	}
+
+	t.scaned = true
+	err := filepath.Walk(filepath.Dir(t.filePrefix), func(f string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || f == t.filePrefix {
+			return nil
+		}
+		if strings.HasPrefix(f, t.filePrefix) {
+			t.queue.PushTS(f)
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Fprintf(t.errWriter, "%v\n", err)
+	} else {
+		for t.queue.Length() > 0 && t.queue.Length() > t.BackupCount {
+			if path, ok := t.queue.PopTS().(string); ok {
+				if err = os.Remove(path); err != nil {
+					fmt.Fprintf(t.errWriter, "%v\n", err)
+					break
+				}
+			}
+		}
+	}
 }
 
 // Process saves an allowed log message into the log file.
@@ -160,24 +197,6 @@ func (t *FileTarget) rotate(bytes int64) {
 	}
 	t.fd.Close()
 	t.currentBytes = 0
-	if !t.scaned {
-		t.scaned = true
-		err := filepath.Walk(filepath.Dir(t.filePrefix), func(f string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() || f == t.filePrefix {
-				return nil
-			}
-			if strings.HasPrefix(f, t.filePrefix) {
-				t.queue.PushTS(f)
-			}
-			return nil
-		})
-		if err != nil {
-			fmt.Fprintf(t.errWriter, "%v\n", err)
-		}
-	}
 	var err error
 	if t.queue.Length() > 0 && t.queue.Length() >= t.BackupCount {
 		if path, ok := t.queue.PopTS().(string); ok {
@@ -186,8 +205,14 @@ func (t *FileTarget) rotate(bytes int64) {
 			}
 		}
 	} else {
-		newPath := fileName + `.` + time.Now().Format(`20060102150405`)
-		os.Rename(t.openedFile, newPath)
+		newPath := fileName
+		if t.openedFile == fileName {
+			newPath = fileName + `.` + time.Now().Format(`20060102150405`)
+			err = os.Rename(t.openedFile, newPath)
+			if err != nil {
+				fmt.Fprintf(t.errWriter, "%v\n", err)
+			}
+		}
 		t.queue.PushTS(newPath)
 	}
 	/*
