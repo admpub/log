@@ -177,11 +177,14 @@ func (t *FileTarget) recordOldLogs() {
 		fmt.Fprintf(t.errWriter, "%v\n", err)
 	} else if t.BackupCount > 0 {
 		for t.queue.Length() >= t.BackupCount {
-			if path, ok := t.queue.PopTS().(string); ok {
-				if err = os.Remove(path); err != nil {
-					fmt.Fprintf(t.errWriter, "%v\n", err)
-					break
-				}
+			path, ok := t.queue.PopTS().(string)
+			if !ok {
+				continue
+			}
+
+			if err = os.Remove(path); err != nil {
+				fmt.Fprintf(t.errWriter, "%v\n", err)
+				break
 			}
 		}
 	}
