@@ -143,8 +143,8 @@ func (t *FileTarget) recordOldLogs() {
 	})
 	if err != nil {
 		fmt.Fprintf(t.errWriter, "%v\n", err)
-	} else {
-		for t.queue.Length() > 0 && t.queue.Length() > t.BackupCount {
+	} else if t.BackupCount > 0 {
+		for t.queue.Length() > t.BackupCount {
 			if path, ok := t.queue.PopTS().(string); ok {
 				if err = os.Remove(path); err != nil {
 					fmt.Fprintf(t.errWriter, "%v\n", err)
@@ -198,23 +198,24 @@ func (t *FileTarget) rotate(bytes int64) {
 	t.fd.Close()
 	t.currentBytes = 0
 	var err error
-	if t.queue.Length() > 0 && t.queue.Length() >= t.BackupCount {
-		if path, ok := t.queue.PopTS().(string); ok {
-			if err = os.Remove(path); err != nil {
-				fmt.Fprintf(t.errWriter, "%v\n", err)
+	if t.BackupCount > 0 {
+		for i := t.queue.Length() - t.BackupCount; i >= 0; i-- {
+			if path, ok := t.queue.PopTS().(string); ok {
+				if err = os.Remove(path); err != nil {
+					fmt.Fprintf(t.errWriter, "%v\n", err)
+				}
 			}
 		}
-	} else {
-		newPath := fileName
-		if t.openedFile == fileName {
-			newPath = fileName + `.` + time.Now().Format(`20060102150405`)
-			err = os.Rename(t.openedFile, newPath)
-			if err != nil {
-				fmt.Fprintf(t.errWriter, "%v\n", err)
-			}
-		}
-		t.queue.PushTS(newPath)
 	}
+	newPath := fileName
+	if t.openedFile == fileName {
+		newPath = fileName + `.` + time.Now().Format(`20060102150405`)
+		err = os.Rename(t.openedFile, newPath)
+		if err != nil {
+			fmt.Fprintf(t.errWriter, "%v\n", err)
+		}
+	}
+	t.queue.PushTS(newPath)
 	/*
 		for i := t.BackupCount; i >= 0; i-- {
 			path := fileName
