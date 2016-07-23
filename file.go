@@ -83,7 +83,17 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 
 		if p2 > -1 {
 			t.timeFormat = placeholder[0:p2]
-			fileName += `%v` + placeholder[p2+1:]
+			fileSuffix := placeholder[p2+1:]
+			switch filepath.Separator {
+			case '/':
+				t.timeFormat = strings.Replace(t.timeFormat, "\\", "/", -1)
+				fileSuffix = strings.Replace(fileSuffix, "\\", "/", -1)
+			case '\\':
+				t.timeFormat = strings.Replace(t.timeFormat, "/", "\\", -1)
+				fileSuffix = strings.Replace(fileSuffix, "/", "\\", -1)
+			}
+			fileName += `%v` + fileSuffix
+
 		}
 		t.FileName = fileName
 		if t.FileName == `` {
@@ -110,13 +120,15 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		}
 		t.queue = queueChan.New(t.BackupCount)
 		t.queue.Dynamic()
-		t.recordOldLogs()
 	}
 	t.openedFile = t.fileName()
 	t.createDir(t.openedFile)
 	t.fd, err = os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
 		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
+	}
+	if t.Rotate {
+		t.recordOldLogs()
 	}
 	return nil
 }
@@ -176,7 +188,7 @@ func (t *FileTarget) recordOldLogs() {
 	if err != nil {
 		fmt.Fprintf(t.errWriter, "%v\n", err)
 	} else if t.BackupCount > 0 {
-		for t.queue.Length() >= t.BackupCount {
+		for t.queue.Length() > t.BackupCount {
 			path, ok := t.queue.PopTS().(string)
 			if !ok {
 				continue
