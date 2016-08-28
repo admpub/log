@@ -19,7 +19,7 @@ type colorSetting struct {
 }
 
 var colorBrushes = map[Level]colorSetting{
-	LevelDebug: colorSetting{ct.White, false},  // white
+	LevelDebug: colorSetting{ct.Cyan, true},    // cyan
 	LevelInfo:  colorSetting{ct.Green, true},   // green
 	LevelWarn:  colorSetting{ct.Yellow, true},  // yellow
 	LevelError: colorSetting{ct.Red, true},     // red
