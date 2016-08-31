@@ -7,6 +7,7 @@ package log
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -464,6 +465,35 @@ func DefaultFormatter(l *Logger, e *Entry) string {
 
 func NormalFormatter(l *Logger, e *Entry) string {
 	return fmt.Sprintf("%v|%v|%v|%v%v", e.Time.Format(`2006-01-02 15:04:05`), e.Level, e.Category, e.Message, e.CallStack)
+}
+
+type JSONL struct {
+	Time      string          `bson:"time" json:"time"`
+	Level     string          `bson:"level" json:"level"`
+	Category  string          `bson:"category" json:"category"`
+	Message   json.RawMessage `bson:"message" json:"message"`
+	CallStack string          `bson:"callStack" json:"callStack"`
+}
+
+func JSONFormatter(l *Logger, e *Entry) string {
+	jsonl := &JSONL{
+		Time:      e.Time.Format(`2006-01-02 15:04:05`),
+		Level:     e.Level.String(),
+		Category:  e.Category,
+		Message:   []byte(`"` + e.Message + `"`),
+		CallStack: e.CallStack,
+	}
+	if len(e.Message) > 0 {
+		switch e.Message[0] {
+		case '{', '[', '"':
+			jsonl.Message = []byte(e.Message)
+		}
+	}
+	b, err := json.Marshal(jsonl)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return string(b)
 }
 
 // GetCallStack returns the current call stack information as a string.
