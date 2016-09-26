@@ -131,6 +131,7 @@ type coreLogger struct {
 	MaxLevel        Level     // the maximum level of messages to be logged
 	Targets         []Target  // targets for sending log messages to
 	SyncMode        bool      // Whether the use of non-asynchronous mode （是否使用非异步模式）
+	MaxGoroutines   int
 }
 
 // Formatter formats a log message into an appropriate string.
@@ -149,10 +150,11 @@ type Logger struct {
 // Category: app, Formatter: DefaultFormatter
 func NewLogger(args ...string) *Logger {
 	logger := &coreLogger{
-		ErrorWriter: os.Stderr,
-		BufferSize:  1024,
-		MaxLevel:    LevelDebug,
-		Targets:     make([]Target, 0),
+		ErrorWriter:   os.Stderr,
+		BufferSize:    1024,
+		MaxLevel:      LevelDebug,
+		Targets:       make([]Target, 0),
+		MaxGoroutines: 1000000,
 	}
 	category := `app`
 	if len(args) > 0 {
@@ -331,8 +333,15 @@ func (l *Logger) newEntry(level Level, message string) {
 	if l.SyncMode {
 		l.syncProcess(entry)
 	} else {
-		l.goroutines++
-		l.entries <- entry
+		send := func() {
+			l.goroutines++
+			l.entries <- entry
+		}
+		if l.goroutines < l.MaxGoroutines {
+			go send()
+		} else {
+			send()
+		}
 	}
 }
 
@@ -460,11 +469,11 @@ func (l *coreLogger) Close() {
 
 // DefaultFormatter is the default formatter used to format every log message.
 func DefaultFormatter(l *Logger, e *Entry) string {
-	return fmt.Sprintf("%v|%v|%v|%v%v", e.Time.Format(time.RFC3339), e.Level, e.Category, e.Message, e.CallStack)
+	return e.Time.Format(time.RFC3339) + "|" + e.Level.String() + "|" + e.Category + "|" + e.Message + e.CallStack
 }
 
 func NormalFormatter(l *Logger, e *Entry) string {
-	return fmt.Sprintf("%v|%v|%v|%v%v", e.Time.Format(`2006-01-02 15:04:05`), e.Level, e.Category, e.Message, e.CallStack)
+	return e.Time.Format(`2006-01-02 15:04:05`) + "|" + e.Level.String() + "|" + e.Category + "|" + e.Message + e.CallStack
 }
 
 type JSONL struct {
