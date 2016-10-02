@@ -140,8 +140,9 @@ type Formatter func(*Logger, *Entry) string
 // Logger records log messages and dispatches them to various targets for further processing.
 type Logger struct {
 	*coreLogger
-	Category  string    // the category associated with this logger
-	Formatter Formatter // message formatter
+	Category   string    // the category associated with this logger
+	Formatter  Formatter // message formatter
+	categories map[string]*Logger
 }
 
 // NewLogger creates a root logger.
@@ -166,6 +167,7 @@ func NewLogger(args ...string) *Logger {
 		coreLogger: logger,
 		Category:   category,
 		Formatter:  NormalFormatter,
+		categories: map[string]*Logger{},
 	}
 }
 
@@ -178,18 +180,24 @@ func New(args ...string) *Logger {
 // The formatter, if not specified, will inherit from the calling logger.
 // It will be used to format all messages logged through this logger.
 func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
-	if len(formatter) > 0 {
-		return &Logger{
+	logger, ok := l.categories[category]
+	if !ok {
+		logger = &Logger{
 			coreLogger: l.coreLogger,
 			Category:   category,
-			Formatter:  formatter[0],
+		}
+		if len(formatter) > 0 {
+			logger.Formatter = formatter[0]
+		} else {
+			logger.Formatter = l.Formatter
+		}
+		l.categories[category] = logger
+	} else {
+		if len(formatter) > 0 {
+			logger.Formatter = formatter[0]
 		}
 	}
-	return &Logger{
-		coreLogger: l.coreLogger,
-		Category:   category,
-		Formatter:  l.Formatter,
-	}
+	return logger
 }
 
 func (l *Logger) Sync(args ...bool) {
