@@ -167,7 +167,7 @@ func NewLogger(args ...string) *Logger {
 		coreLogger: logger,
 		Category:   category,
 		Formatter:  NormalFormatter,
-		categories: map[string]*Logger{},
+		categories: make(map[string]*Logger),
 	}
 }
 
