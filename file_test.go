@@ -33,6 +33,7 @@ func TestFileTarget(t *testing.T) {
 	os.Remove(logFile)
 
 	logger := log.NewLogger()
+	logger.Sync()
 	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.Categories = []string{"system.*"}

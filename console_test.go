@@ -46,6 +46,7 @@ func (t *ConsoleTargetMock) Process(e *log.Entry) {
 
 func TestConsoleTarget(t *testing.T) {
 	logger := log.NewLogger()
+	logger.Sync()
 	target := &ConsoleTargetMock{
 		done:          make(chan bool, 0),
 		ConsoleTarget: log.NewConsoleTarget(),
@@ -66,5 +67,26 @@ func TestConsoleTarget(t *testing.T) {
 	}
 	if !strings.Contains(string(writer.bytes), "t2: 3") {
 		t.Errorf("Expected %q not found from `%q`", "t2: 3", string(writer.bytes))
+	}
+}
+
+func TestConsoleTargetAddSpace(t *testing.T) {
+	logger := log.NewLogger()
+	logger.Sync()
+	logger.AddSpace = true
+	target := &ConsoleTargetMock{
+		done:          make(chan bool, 0),
+		ConsoleTarget: log.NewConsoleTarget(),
+	}
+	writer := &MemoryWriter{}
+	target.Writer = writer
+	logger.SetTarget(target)
+	logger.Info("a", "b", "c")
+
+	logger.Close()
+	<-target.done
+
+	if !strings.HasSuffix(string(writer.bytes), "a b c\n") {
+		t.Errorf("Expected %q not found from `%q`", "a b c", string(writer.bytes))
 	}
 }

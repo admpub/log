@@ -5,6 +5,7 @@
 package log_test
 
 import (
+	"fmt"
 	"github.com/admpub/log"
 	"github.com/go-ozzo/ozzo-config"
 	"io"
@@ -70,6 +71,7 @@ func (t *MemoryTarget) Close() {
 
 func TestLoggerLog(t *testing.T) {
 	logger := log.NewLogger()
+	logger.Sync()
 	target := &MemoryTarget{
 		ready: make(chan bool, 0),
 	}
@@ -93,7 +95,10 @@ func TestLoggerLog(t *testing.T) {
 	logger.Close()
 
 	if len(target.entries) != 6 {
-		t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 9)
+		for i, v := range target.entries {
+			fmt.Printf("%v.\t%#v\n", i, *v)
+		}
+		t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 6)
 	}
 	levels := ""
 	messages := ""

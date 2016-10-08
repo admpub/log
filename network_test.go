@@ -52,7 +52,7 @@ func (s *LogServer) Start(network, address string) error {
 
 func TestNetworkTarget(t *testing.T) {
 	network := "tcp"
-	address := ":10234"
+	address := "127.0.0.1:10234"
 	server := &LogServer{t: t}
 	if err := server.Start(network, address); err != nil {
 		t.Errorf("server.Open(): %v", err)
@@ -60,6 +60,7 @@ func TestNetworkTarget(t *testing.T) {
 	}
 
 	logger := log.NewLogger()
+	logger.Sync()
 	target := log.NewNetworkTarget()
 	target.Network = network
 	target.Address = address

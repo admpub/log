@@ -131,7 +131,8 @@ type coreLogger struct {
 	MaxLevel        Level     // the maximum level of messages to be logged
 	Targets         []Target  // targets for sending log messages to
 	SyncMode        bool      // Whether the use of non-asynchronous mode （是否使用非异步模式）
-	MaxGoroutines   int
+	MaxGoroutines   int       // Max Goroutine
+	AddSpace        bool      // Add a space between two arguments.
 }
 
 // Formatter formats a log message into an appropriate string.
@@ -310,7 +311,13 @@ func (l *Logger) Log(level Level, a ...interface{}) {
 	if level > l.MaxLevel || !l.open {
 		return
 	}
-	message := fmt.Sprint(a...)
+	var message string
+	if l.AddSpace {
+		message = fmt.Sprintln(a...)
+		message = message[:len(message)-1]
+	} else {
+		message = fmt.Sprint(a...)
+	}
 	l.newEntry(level, message)
 }
 
@@ -358,7 +365,6 @@ func (l *Logger) newFatalEntry(level Level, message string) {
 	}
 	entry.CallStack = GetCallStack(3, stackDepth, l.CallStackFilter)
 	entry.FormattedMessage = l.Formatter(l, entry)
-	l.syncProcess(entry)
 	if l.SyncMode {
 		l.syncProcess(entry)
 	} else {
