@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -123,7 +124,7 @@ type coreLogger struct {
 	lock        sync.Mutex
 	open        bool        // whether the logger is open
 	entries     chan *Entry // log entries
-	goroutines  int
+	goroutines  int32
 	fatalAction Action
 
 	ErrorWriter     io.Writer // the writer used to write errors caused by log targets
@@ -133,7 +134,7 @@ type coreLogger struct {
 	MaxLevel        Level     // the maximum level of messages to be logged
 	Targets         []Target  // targets for sending log messages to
 	SyncMode        bool      // Whether the use of non-asynchronous mode （是否使用非异步模式）
-	MaxGoroutines   int       // Max Goroutine
+	MaxGoroutines   int32     // Max Goroutine
 	AddSpace        bool      // Add a space between two arguments.
 }
 
@@ -158,7 +159,7 @@ func NewLogger(args ...string) *Logger {
 		BufferSize:    1024,
 		MaxLevel:      LevelDebug,
 		Targets:       make([]Target, 0),
-		MaxGoroutines: 1000000,
+		MaxGoroutines: 100000,
 	}
 	category := `app`
 	if len(args) > 0 {
@@ -354,10 +355,11 @@ func (l *Logger) newEntry(level Level, message string) {
 		l.syncProcess(entry)
 	} else {
 		send := func() {
-			l.goroutines++
+			atomic.AddInt32(&l.goroutines, 1)
 			l.entries <- entry
 		}
-		if l.goroutines < l.MaxGoroutines {
+
+		if atomic.LoadInt32(&l.goroutines) < l.MaxGoroutines {
 			go send()
 		} else {
 			send()
@@ -381,13 +383,14 @@ func (l *Logger) newFatalEntry(level Level, message string) {
 	if l.SyncMode {
 		l.syncProcess(entry)
 	} else {
-		l.goroutines++
+		atomic.AddInt32(&l.goroutines, 1)
 		l.entries <- entry
 	}
 
 	for {
-		//fmt.Println(`waiting ...`, l.goroutines)
-		if l.goroutines <= 0 {
+		goroutines := atomic.LoadInt32(&l.goroutines)
+		//fmt.Println(`waiting ...`, goroutines)
+		if goroutines <= 0 {
 			switch l.fatalAction {
 			case ActionPanic:
 				panic(`Fatal error.`)
@@ -404,7 +407,7 @@ func (l *Logger) newFatalEntry(level Level, message string) {
 			}
 			break
 		}
-		time.Sleep(time.Duration(l.goroutines) * time.Microsecond)
+		time.Sleep(time.Duration(goroutines) * time.Microsecond)
 	}
 }
 
@@ -453,8 +456,7 @@ func (l *coreLogger) process() {
 		for _, target := range l.Targets {
 			target.Process(entry)
 		}
-
-		l.goroutines--
+		atomic.AddInt32(&l.goroutines, -1)
 
 		if entry == nil {
 			break
