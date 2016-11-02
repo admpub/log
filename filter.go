@@ -59,3 +59,20 @@ func (t *Filter) Allow(e *Entry) bool {
 	}
 	return len(t.catNames) == 0 && len(t.catPrefixes) == 0
 }
+
+func (t *Filter) SetLevel(level interface{}) {
+	if name, ok := level.(string); ok {
+		if le, ok := GetLevel(name); ok {
+			t.MaxLevel = le
+		}
+	} else if id, ok := level.(Level); ok {
+		t.MaxLevel = id
+	}
+}
+
+func (t *Filter) SetLevels(levels ...Level) {
+	t.Levels = map[Level]bool{}
+	for _, level := range levels {
+		t.Levels[level] = true
+	}
+}

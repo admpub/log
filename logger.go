@@ -114,6 +114,8 @@ type Target interface {
 	// Close is called when Logger.Close() is called, which gives each target
 	// a chance to flush the logged messages to their destination storage.
 	Close()
+	SetLevel(interface{})
+	SetLevels(...Level)
 }
 
 // coreLogger maintains the log messages in a channel and sends them to various targets.
@@ -232,6 +234,9 @@ func (l *Logger) AddTarget(targets ...Target) {
 func (l *Logger) SetLevel(level string) {
 	if le, ok := GetLevel(level); ok {
 		l.MaxLevel = le
+	}
+	for _, target := range l.Targets {
+		target.SetLevel(l.MaxLevel)
 	}
 }
 
