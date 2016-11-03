@@ -236,9 +236,6 @@ func (l *Logger) SetLevel(level string) {
 	if le, ok := GetLevel(level); ok {
 		l.MaxLevel = le
 	}
-	for _, target := range l.Targets {
-		target.SetLevel(l.MaxLevel)
-	}
 }
 
 func (l *Logger) Fatalf(format string, a ...interface{}) {
