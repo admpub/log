@@ -1,8 +1,6 @@
 package log
 
-import (
-	"io"
-)
+import "io"
 
 var DefaultLog = &defaultLogger{Logger: New()}
 
@@ -76,4 +74,39 @@ func Debug(a ...interface{}) {
 
 func Writer(level Level) io.Writer {
 	return DefaultLog.Writer(level)
+}
+
+func UseCommonTargets(levelName string, targetNames ...string) {
+	DefaultLog.SetLevel(levelName)
+	targets := []Target{}
+
+	for _, targetName := range targetNames {
+		switch targetName {
+		case "console":
+			//输出到命令行
+			consoleTarget := NewConsoleTarget()
+			consoleTarget.ColorMode = false
+			targets = append(targets, consoleTarget)
+
+		case "file":
+			//输出到文件
+			fileTarget := NewFileTarget()
+			fileTarget.FileName = `logs/{date:20060102}_info.log`
+			fileTarget.Filter.Levels = map[Level]bool{LevelInfo: true}
+			fileTarget.MaxBytes = 10 * 1024 * 1024
+			targets = append(targets, fileTarget)
+			fileTarget2 := NewFileTarget()
+			fileTarget2.FileName = `logs/{date:20060102}_warn.log` //按天分割日志
+			fileTarget2.Filter.Levels = map[Level]bool{LevelWarn: true}
+			fileTarget2.MaxBytes = 10 * 1024 * 1024
+			targets = append(targets, fileTarget2)
+			fileTarget3 := NewFileTarget()
+			fileTarget3.FileName = `logs/{date:20060102}_error.log` //按天分割日志
+			fileTarget3.Filter.MaxLevel = LevelError
+			fileTarget3.MaxBytes = 10 * 1024 * 1024
+			targets = append(targets, fileTarget3)
+		}
+	}
+	SetTarget(targets...)
+	SetFatalAction(ActionExit)
 }
