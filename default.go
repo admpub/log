@@ -90,21 +90,34 @@ func UseCommonTargets(levelName string, targetNames ...string) {
 
 		case "file":
 			//输出到文件
-			fileTarget := NewFileTarget()
-			fileTarget.FileName = `logs/{date:20060102}_info.log`
-			fileTarget.Filter.Levels = map[Level]bool{LevelInfo: true}
-			fileTarget.MaxBytes = 10 * 1024 * 1024
-			targets = append(targets, fileTarget)
-			fileTarget2 := NewFileTarget()
-			fileTarget2.FileName = `logs/{date:20060102}_warn.log` //按天分割日志
-			fileTarget2.Filter.Levels = map[Level]bool{LevelWarn: true}
-			fileTarget2.MaxBytes = 10 * 1024 * 1024
-			targets = append(targets, fileTarget2)
-			fileTarget3 := NewFileTarget()
-			fileTarget3.FileName = `logs/{date:20060102}_error.log` //按天分割日志
-			fileTarget3.Filter.MaxLevel = LevelError
-			fileTarget3.MaxBytes = 10 * 1024 * 1024
-			targets = append(targets, fileTarget3)
+			if DefaultLog.MaxLevel >= LevelInfo {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_info.log`
+				fileTarget.Filter.Levels = map[Level]bool{LevelInfo: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel >= LevelWarn {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_warn.log` //按天分割日志
+				fileTarget.Filter.Levels = map[Level]bool{LevelWarn: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel >= LevelError {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_error.log` //按天分割日志
+				fileTarget.Filter.MaxLevel = LevelError
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel == LevelDebug {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_debug.log`
+				fileTarget.Filter.Levels = map[Level]bool{LevelDebug: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
 		}
 	}
 	SetTarget(targets...)
