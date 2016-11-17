@@ -6,10 +6,11 @@ package log_test
 
 import (
 	"fmt"
-	"github.com/admpub/log"
-	"github.com/go-ozzo/ozzo-config"
 	"io"
 	"testing"
+
+	"github.com/admpub/log"
+	"github.com/go-ozzo/ozzo-config"
 )
 
 func TestNewLogger(t *testing.T) {
@@ -44,6 +45,7 @@ func TestGetLogger(t *testing.T) {
 }
 
 type MemoryTarget struct {
+	*log.Filter
 	entries []*log.Entry
 	open    bool
 	ready   chan bool
@@ -73,7 +75,8 @@ func TestLoggerLog(t *testing.T) {
 	logger := log.NewLogger()
 	logger.Sync()
 	target := &MemoryTarget{
-		ready: make(chan bool, 0),
+		Filter: &log.Filter{MaxLevel: log.LevelDebug},
+		ready:  make(chan bool, 0),
 	}
 	logger.SetTarget()
 	if target.open {
