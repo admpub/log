@@ -76,11 +76,14 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		t.filePrefix = fileName
 		placeholder := t.FileName[p+6:]
 		p2 := strings.Index(placeholder, `}`)
-
+		var hs bool
+		switch fileName[len(fileName)-1] {
+		case '/', '\\':
+			hs = true
+		}
 		if fileName, err = filepath.Abs(fileName); err != nil {
 			return err
 		}
-
 		if p2 > -1 {
 			t.timeFormat = placeholder[0:p2]
 			fileSuffix := placeholder[p2+1:]
@@ -92,7 +95,11 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 				t.timeFormat = strings.Replace(t.timeFormat, "/", "\\", -1)
 				fileSuffix = strings.Replace(fileSuffix, "/", "\\", -1)
 			}
-			fileName += `%v` + fileSuffix
+			if hs {
+				fileName = filepath.Join(fileName, `%v`+fileSuffix)
+			} else {
+				fileName += `%v` + fileSuffix
+			}
 
 		}
 		t.FileName = fileName

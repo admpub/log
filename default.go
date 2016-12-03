@@ -1,8 +1,6 @@
 package log
 
-import (
-	"io"
-)
+import "io"
 
 var DefaultLog = &defaultLogger{Logger: New()}
 
@@ -76,4 +74,52 @@ func Debug(a ...interface{}) {
 
 func Writer(level Level) io.Writer {
 	return DefaultLog.Writer(level)
+}
+
+func UseCommonTargets(levelName string, targetNames ...string) {
+	DefaultLog.SetLevel(levelName)
+	targets := []Target{}
+
+	for _, targetName := range targetNames {
+		switch targetName {
+		case "console":
+			//输出到命令行
+			consoleTarget := NewConsoleTarget()
+			consoleTarget.ColorMode = false
+			targets = append(targets, consoleTarget)
+
+		case "file":
+			//输出到文件
+			if DefaultLog.MaxLevel >= LevelInfo {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_info.log`
+				fileTarget.Filter.Levels = map[Level]bool{LevelInfo: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel >= LevelWarn {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_warn.log` //按天分割日志
+				fileTarget.Filter.Levels = map[Level]bool{LevelWarn: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel >= LevelError {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_error.log` //按天分割日志
+				fileTarget.Filter.MaxLevel = LevelError
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+			if DefaultLog.MaxLevel == LevelDebug {
+				fileTarget := NewFileTarget()
+				fileTarget.FileName = `logs/{date:20060102}_debug.log`
+				fileTarget.Filter.Levels = map[Level]bool{LevelDebug: true}
+				fileTarget.MaxBytes = 10 * 1024 * 1024
+				targets = append(targets, fileTarget)
+			}
+		}
+	}
+	SetTarget(targets...)
+	SetFatalAction(ActionExit)
 }

@@ -115,6 +115,8 @@ type Target interface {
 	// Close is called when Logger.Close() is called, which gives each target
 	// a chance to flush the logged messages to their destination storage.
 	Close()
+	SetLevel(interface{})
+	SetLevels(...Level)
 }
 
 // coreLogger maintains the log messages in a channel and sends them to various targets.
