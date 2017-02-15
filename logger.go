@@ -86,6 +86,10 @@ func (l *LoggerWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
+func (l *LoggerWriter) Printf(format string, v ...interface{}) {
+	l.Logger.newEntry(l.Level, fmt.Sprintf(format, v...))
+}
+
 // Entry represents a log entry.
 type Entry struct {
 	Level     Level
