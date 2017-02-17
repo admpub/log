@@ -208,6 +208,17 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return logger
 }
 
+func (l *Logger) Clone(keepSubLogger ...bool) *Logger {
+	log := New(l.Category)
+	log.coreLogger = &(*l.coreLogger)
+	log.Formatter = l.Formatter
+	log.SetTarget(l.Targets...)
+	if len(keepSubLogger) > 0 && keepSubLogger[0] {
+		log.categories = l.categories
+	}
+	return log
+}
+
 func (l *Logger) Sync(args ...bool) {
 	if len(args) < 1 {
 		l.SyncMode = true
