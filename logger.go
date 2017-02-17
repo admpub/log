@@ -208,26 +208,16 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return logger
 }
 
-func (l *Logger) Clone(keepSubLogger ...bool) *Logger {
-	log := New(l.Category)
-	log.coreLogger = &(*l.coreLogger)
-	log.Formatter = l.Formatter
-	log.SetTarget(l.Targets...)
-	if len(keepSubLogger) > 0 && keepSubLogger[0] {
-		log.categories = l.categories
-	}
-	return log
-}
-
-func (l *Logger) Sync(args ...bool) {
+func (l *Logger) Sync(args ...bool) *Logger {
 	if len(args) < 1 {
 		l.SyncMode = true
-		return
+		return l
 	}
 	l.SyncMode = args[0]
+	return l
 }
 
-func (l *Logger) SetTarget(targets ...Target) {
+func (l *Logger) SetTarget(targets ...Target) *Logger {
 	l.Close()
 	if len(targets) > 0 {
 		l.Targets = targets
@@ -235,22 +225,26 @@ func (l *Logger) SetTarget(targets ...Target) {
 	} else {
 		l.Targets = []Target{}
 	}
+	return l
 }
 
-func (l *Logger) SetFatalAction(action Action) {
+func (l *Logger) SetFatalAction(action Action) *Logger {
 	l.fatalAction = action
+	return l
 }
 
-func (l *Logger) AddTarget(targets ...Target) {
+func (l *Logger) AddTarget(targets ...Target) *Logger {
 	l.Close()
 	l.Targets = append(l.Targets, targets...)
 	l.Open()
+	return l
 }
 
-func (l *Logger) SetLevel(level string) {
+func (l *Logger) SetLevel(level string) *Logger {
 	if le, ok := GetLevel(level); ok {
 		l.MaxLevel = le
 	}
+	return l
 }
 
 func (l *Logger) Fatalf(format string, a ...interface{}) {
