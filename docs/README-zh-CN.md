@@ -80,7 +80,7 @@ func main() {
 
 记录器可以装配不同的标的对象，应用不同的过滤规则。
 
-ozzo-log 原生自带以下过滤器：
+log 原生自带以下过滤器：
 
 * `ConsoleTarget`：于控制台窗口内显示过滤后的信息
 * `FileTarget`：将过滤后的消息写入文件，支持文件分页轮替（file rotate）

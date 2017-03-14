@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/admpub/log"
-	"github.com/go-ozzo/ozzo-config"
 )
 
 func TestNewLogger(t *testing.T) {
@@ -116,60 +115,5 @@ func TestLoggerLog(t *testing.T) {
 	}
 	if messages != expectedMessages {
 		t.Errorf("messages = %v, expected %v", messages, expectedMessages)
-	}
-}
-
-func TestLoggerConfig(t *testing.T) {
-	c := config.New()
-	err := c.LoadJSON([]byte(`{
-		"Logger": {
-			"MaxLevel": 2,
-			"Category": "app2",
-			"Targets": [
-				{
-					"type": "memory1",
-					"Option1": "abc",
-					"Option2": true
-				},
-				{
-					"type": "memory2",
-					"Option1": "xyz"
-				}
-			]
-		}
-	}`))
-	if err != nil {
-		t.Errorf("config.LoadJSON(): %v", err)
-	}
-	c.Register("memory1", func() *MemoryTarget {
-		return &MemoryTarget{}
-	})
-	c.Register("memory2", func() *MemoryTarget {
-		return &MemoryTarget{Option2: true}
-	})
-	logger := log.NewLogger()
-	logger.SetTarget()
-
-	if err := c.Configure(logger, "Logger"); err != nil {
-		t.Errorf("config.Configure(logger): %v", err)
-	}
-	if logger.MaxLevel != log.LevelWarn {
-		t.Errorf("logger.MaxLevel = %v, expected %v", logger.MaxLevel, log.LevelWarn)
-	}
-	if logger.Category != "app2" {
-		t.Errorf("logger.Category = %v, expected %v", logger.Category, "app2")
-	}
-
-	if len(logger.Targets) != 2 {
-		t.Errorf("len(logger.Targets) = %v, expected %v", len(logger.Targets), 2)
-		return
-	}
-	m1 := logger.Targets[0].(*MemoryTarget)
-	m2 := logger.Targets[1].(*MemoryTarget)
-	if m1.Option1 != "abc" || m1.Option2 != true {
-		t.Errorf("m1.Option1 = %v, Option2 = %v, expected %v and %v", m1.Option1, m1.Option2, "abc", true)
-	}
-	if m2.Option1 != "xyz" || m2.Option2 != true {
-		t.Errorf("m2.Option1 = %v, Option2 = %v, expected %v and %v", m2.Option1, m2.Option2, "xyz", true)
 	}
 }
