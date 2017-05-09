@@ -440,9 +440,7 @@ func (l *coreLogger) Open() error {
 	}
 
 	var size int
-	if l.syncMode {
-		l.wait()
-	} else {
+	if !l.syncMode {
 		if l.BufferSize < 0 {
 			return errors.New("Logger.BufferSize must be no less than 0.")
 		}
@@ -488,6 +486,7 @@ func (l *coreLogger) Close() {
 		return
 	}
 	l.open = false
+	l.wait()
 	// use a nil entry to signal the close of logger
 	l.entries <- nil
 	for _, target := range l.Targets {
