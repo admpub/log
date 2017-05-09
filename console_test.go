@@ -5,9 +5,10 @@
 package log_test
 
 import (
-	"github.com/admpub/log"
 	"strings"
 	"testing"
+
+	"github.com/admpub/log"
 )
 
 func TestNewConsoleTarget(t *testing.T) {
@@ -45,8 +46,7 @@ func (t *ConsoleTargetMock) Process(e *log.Entry) {
 }
 
 func TestConsoleTarget(t *testing.T) {
-	logger := log.NewLogger()
-	logger.Sync()
+	logger := log.NewLogger().Sync()
 	target := &ConsoleTargetMock{
 		done:          make(chan bool, 0),
 		ConsoleTarget: log.NewConsoleTarget(),
@@ -71,8 +71,7 @@ func TestConsoleTarget(t *testing.T) {
 }
 
 func TestConsoleTargetAddSpace(t *testing.T) {
-	logger := log.NewLogger()
-	logger.Sync()
+	logger := log.NewLogger().Sync()
 	logger.AddSpace = true
 	target := &ConsoleTargetMock{
 		done:          make(chan bool, 0),

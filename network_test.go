@@ -5,10 +5,11 @@
 package log_test
 
 import (
-	"github.com/admpub/log"
 	"net"
 	"strings"
 	"testing"
+
+	"github.com/admpub/log"
 )
 
 func TestNewNetworkTarget(t *testing.T) {
@@ -59,8 +60,7 @@ func TestNetworkTarget(t *testing.T) {
 		return
 	}
 
-	logger := log.NewLogger()
-	logger.Sync()
+	logger := log.NewLogger().Sync()
 	target := log.NewNetworkTarget()
 	target.Network = network
 	target.Address = address

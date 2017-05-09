@@ -71,8 +71,7 @@ func (t *MemoryTarget) Close() {
 }
 
 func TestLoggerLog(t *testing.T) {
-	logger := log.NewLogger()
-	logger.Sync()
+	logger := log.NewLogger().Sync()
 	target := &MemoryTarget{
 		Filter: &log.Filter{MaxLevel: log.LevelDebug},
 		ready:  make(chan bool, 0),
@@ -116,4 +115,14 @@ func TestLoggerLog(t *testing.T) {
 	if messages != expectedMessages {
 		t.Errorf("messages = %v, expected %v", messages, expectedMessages)
 	}
+	//*
+	consoleTarget := log.NewConsoleTarget()
+	logger.Async().SetTarget(consoleTarget)
+	for i := 0; i < 10; i++ {
+		logger.Infof(`async: %d`, i+1)
+	}
+	logger.Fatal(`fatal.`)
+	logger.Sync().Error(`end.`)
+	logger.Close()
+	//*/
 }

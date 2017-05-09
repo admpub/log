@@ -5,11 +5,12 @@
 package log_test
 
 import (
-	"github.com/admpub/log"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/admpub/log"
 )
 
 func TestNewFileTarget(t *testing.T) {
@@ -32,8 +33,7 @@ func TestFileTarget(t *testing.T) {
 	logFile := "app.log"
 	os.Remove(logFile)
 
-	logger := log.NewLogger()
-	logger.Sync()
+	logger := log.NewLogger().Sync()
 	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.Categories = []string{"system.*"}
