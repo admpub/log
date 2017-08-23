@@ -134,14 +134,18 @@ type coreLogger struct {
 	fatalAction Action
 	syncMode    bool // Whether the use of non-asynchronous mode （是否使用非异步模式）
 
-	ErrorWriter     io.Writer // the writer used to write errors caused by log targets
-	BufferSize      int       // the size of the channel storing log entries
-	CallStackDepth  int       // the number of call stack frames to be logged for each message. 0 means do not log any call stack frame.
-	CallStackFilter string    // a substring that a call stack frame file path should contain in order for the frame to be counted
-	MaxLevel        Level     // the maximum level of messages to be logged
-	Targets         []Target  // targets for sending log messages to
-	MaxGoroutines   int32     // Max Goroutine
-	AddSpace        bool      // Add a space between two arguments.
+	ErrorWriter   io.Writer // the writer used to write errors caused by log targets
+	BufferSize    int       // the size of the channel storing log entries
+	CallStack     map[Level]*CallStack
+	MaxLevel      Level    // the maximum level of messages to be logged
+	Targets       []Target // targets for sending log messages to
+	MaxGoroutines int32    // Max Goroutine
+	AddSpace      bool     // Add a space between two arguments.
+}
+
+type CallStack struct {
+	Depth  int
+	Filter string
 }
 
 // Formatter formats a log message into an appropriate string.
@@ -164,6 +168,7 @@ func NewLogger(args ...string) *Logger {
 		ErrorWriter: os.Stderr,
 		BufferSize:  1024,
 		MaxLevel:    LevelDebug,
+		CallStack:   make(map[Level]*CallStack),
 		Targets:     make([]Target, 0),
 		waiting:     &sync.Once{},
 	}
@@ -373,8 +378,8 @@ func (l *Logger) newEntry(level Level, message string) {
 		Message:  message,
 		Time:     time.Now(),
 	}
-	if l.CallStackDepth > 0 {
-		entry.CallStack = GetCallStack(3, l.CallStackDepth, l.CallStackFilter)
+	if cs, ok := l.CallStack[level]; ok && cs != nil && cs.Depth > 0 {
+		entry.CallStack = GetCallStack(3, cs.Depth, cs.Filter)
 	}
 	entry.FormattedMessage = l.Formatter(l, entry)
 	l.sendEntry(entry)
@@ -387,11 +392,18 @@ func (l *Logger) newFatalEntry(level Level, message string) {
 		Message:  message,
 		Time:     time.Now(),
 	}
-	stackDepth := l.CallStackDepth
+	var (
+		stackDepth  int
+		stackFilter string
+	)
+	if cs, ok := l.CallStack[level]; ok && cs != nil {
+		stackDepth = cs.Depth
+		stackFilter = cs.Filter
+	}
 	if stackDepth < 20 {
 		stackDepth = 20
 	}
-	entry.CallStack = GetCallStack(3, stackDepth, l.CallStackFilter)
+	entry.CallStack = GetCallStack(3, stackDepth, stackFilter)
 	entry.FormattedMessage = l.Formatter(l, entry)
 	l.sendEntry(entry)
 	l.wait()
@@ -435,10 +447,6 @@ func (l *coreLogger) Open() error {
 	if l.ErrorWriter == nil {
 		return errors.New("Logger.ErrorWriter must be set.")
 	}
-	if l.CallStackDepth < 0 {
-		return errors.New("Logger.CallStackDepth must be no less than 0.")
-	}
-
 	var size int
 	if !l.syncMode {
 		if l.BufferSize < 0 {
