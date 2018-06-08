@@ -125,7 +125,7 @@ type Target interface {
 
 // coreLogger maintains the log messages in a channel and sends them to various targets.
 type coreLogger struct {
-	lock        sync.Mutex
+	lock        sync.RWMutex
 	open        bool        // whether the logger is open
 	entries     chan *Entry // log entries
 	sendN       uint32
@@ -195,6 +195,8 @@ func New(args ...string) *Logger {
 // The formatter, if not specified, will inherit from the calling logger.
 // It will be used to format all messages logged through this logger.
 func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
+	l.lock.Lock()
+	defer l.lock.Unlock()
 	logger, ok := l.categories[category]
 	if !ok {
 		logger = &Logger{
@@ -353,6 +355,8 @@ func (l *Logger) Debug(a ...interface{}) {
 
 // Log logs a message of a specified severity level.
 func (l *Logger) Log(level Level, a ...interface{}) {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
 	if level > l.MaxLevel || !l.open {
 		return
 	}
@@ -490,6 +494,8 @@ func (l *coreLogger) process() {
 // Existing messages will be processed before the targets are closed.
 // New incoming messages will be discarded after calling this method.
 func (l *coreLogger) Close() {
+	l.lock.RLock()
+	defer l.lock.RUnlock()
 	if !l.open {
 		return
 	}
