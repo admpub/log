@@ -20,9 +20,6 @@ func TestNewLogger(t *testing.T) {
 	if logger.Category != "app" {
 		t.Errorf("NewLogger().Category = %v, expected %v", logger.Category, "app")
 	}
-	if logger.CallStackDepth != 0 {
-		t.Errorf("NewLogger().CallStackDepth = %v, expected %v", logger.CallStackDepth, 0)
-	}
 }
 
 func TestGetLogger(t *testing.T) {
@@ -121,6 +118,7 @@ func TestLoggerLog(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		logger.Infof(`async: %d`, i+1)
 	}
+	logger.Writer(log.LevelDebug).Write([]byte(`test writer`))
 	logger.Fatal(`fatal.`)
 	logger.Sync().Error(`end.`)
 	logger.Close()

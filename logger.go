@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -34,26 +36,32 @@ const (
 	ActionExit
 )
 
-// Level describes the level of a log message.
-type Level int
-type Action int
+type (
+	// Level describes the level of a log message.
+	Level  int
+	Action int
+)
 
-// LevelNames maps log levels to names
-var LevelNames = map[Level]string{
-	LevelDebug: "Debug",
-	LevelInfo:  "Info",
-	LevelWarn:  "Warn",
-	LevelError: "Error",
-	LevelFatal: "Fatal",
-}
+var (
+	// LevelNames maps log levels to names
+	LevelNames = map[Level]string{
+		LevelDebug: "Debug",
+		LevelInfo:  "Info",
+		LevelWarn:  "Warn",
+		LevelError: "Error",
+		LevelFatal: "Fatal",
+	}
 
-var Levels = map[string]Level{
-	"Debug": LevelDebug,
-	"Info":  LevelInfo,
-	"Warn":  LevelWarn,
-	"Error": LevelError,
-	"Fatal": LevelFatal,
-}
+	Levels = map[string]Level{
+		"Debug": LevelDebug,
+		"Info":  LevelInfo,
+		"Warn":  LevelWarn,
+		"Error": LevelError,
+		"Fatal": LevelFatal,
+	}
+
+	CallDepth = 4
+)
 
 func GetLevel(level string) (Level, bool) {
 	level = strings.Title(level)
@@ -82,12 +90,12 @@ func (l *LoggerWriter) Write(p []byte) (n int, err error) {
 	} else {
 		s = string(p)
 	}
-	l.Logger.newEntry(l.Level, s)
+	l.Logger.Log(l.Level, s)
 	return
 }
 
 func (l *LoggerWriter) Printf(format string, v ...interface{}) {
-	l.Logger.newEntry(l.Level, fmt.Sprintf(format, v...))
+	l.Logger.Logf(l.Level, format, v...)
 }
 
 // Entry represents a log entry.
@@ -372,51 +380,41 @@ func (l *Logger) Log(level Level, a ...interface{}) {
 
 // Log logs a message of a specified severity level.
 func (l *Logger) newEntry(level Level, message string) {
-	if level == LevelFatal {
-		l.newFatalEntry(level, message)
-		return
-	}
 	entry := &Entry{
 		Category: l.Category,
 		Level:    level,
 		Message:  message,
 		Time:     time.Now(),
+	}
+	if level == LevelFatal {
+		var (
+			stackDepth  int
+			stackFilter string
+		)
+		if cs, ok := l.CallStack[level]; ok && cs != nil {
+			stackDepth = cs.Depth
+			stackFilter = cs.Filter
+		}
+		if stackDepth < 20 {
+			stackDepth = 20
+		}
+		entry.CallStack = GetCallStack(3, stackDepth, stackFilter)
+		entry.FormattedMessage = l.Formatter(l, entry)
+		l.sendEntry(entry)
+		l.wait()
+		switch l.fatalAction {
+		case ActionPanic:
+			panic(entry.FormattedMessage)
+		case ActionExit:
+			os.Exit(-1)
+		}
+		return
 	}
 	if cs, ok := l.CallStack[level]; ok && cs != nil && cs.Depth > 0 {
 		entry.CallStack = GetCallStack(3, cs.Depth, cs.Filter)
 	}
 	entry.FormattedMessage = l.Formatter(l, entry)
 	l.sendEntry(entry)
-}
-
-func (l *Logger) newFatalEntry(level Level, message string) {
-	entry := &Entry{
-		Category: l.Category,
-		Level:    level,
-		Message:  message,
-		Time:     time.Now(),
-	}
-	var (
-		stackDepth  int
-		stackFilter string
-	)
-	if cs, ok := l.CallStack[level]; ok && cs != nil {
-		stackDepth = cs.Depth
-		stackFilter = cs.Filter
-	}
-	if stackDepth < 20 {
-		stackDepth = 20
-	}
-	entry.CallStack = GetCallStack(3, stackDepth, stackFilter)
-	entry.FormattedMessage = l.Formatter(l, entry)
-	l.sendEntry(entry)
-	l.wait()
-	switch l.fatalAction {
-	case ActionPanic:
-		panic(entry.FormattedMessage)
-	case ActionExit:
-		os.Exit(-1)
-	}
 }
 
 func (l *coreLogger) wait() {
@@ -515,6 +513,15 @@ func DefaultFormatter(l *Logger, e *Entry) string {
 
 func NormalFormatter(l *Logger, e *Entry) string {
 	return e.Time.Format(`2006-01-02 15:04:05`) + "|" + e.Level.String() + "|" + e.Category + "|" + e.Message + e.CallStack
+}
+
+func ShortFileFormatter(l *Logger, e *Entry) string {
+	_, file, line, ok := runtime.Caller(CallDepth)
+	if !ok {
+		return e.Time.Format(`2006-01-02 15:04:05`) + "|" + e.Level.String() + "|" + e.Category + "|" + e.Message + e.CallStack
+	}
+
+	return e.Time.Format(`2006-01-02 15:04:05`) + "|" + filepath.Base(file) + ":" + strconv.Itoa(line) + "|" + e.Level.String() + "|" + e.Category + "|" + e.Message + e.CallStack
 }
 
 type JSONL struct {
