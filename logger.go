@@ -218,6 +218,7 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 			coreLogger: l.coreLogger,
 			Category:   category,
 			categories: make(map[string]*Logger),
+			CallDepth:  l.CallDepth,
 		}
 		if len(formatter) > 0 {
 			logger.Formatter = formatter[0]
