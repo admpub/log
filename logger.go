@@ -196,6 +196,7 @@ func NewWithCallDepth(callDepth int, args ...string) *Logger {
 		coreLogger: logger,
 		Category:   category,
 		Formatter:  NormalFormatter,
+		CallDepth:  callDepth,
 		categories: make(map[string]*Logger),
 	}
 }
