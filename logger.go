@@ -90,12 +90,29 @@ func (l *LoggerWriter) Write(p []byte) (n int, err error) {
 	} else {
 		s = string(p)
 	}
-	l.Logger.Log(l.Level, s)
+	level, s := l.detectLevel(s)
+	l.Logger.Log(level, s)
 	return
 }
 
+func (l *LoggerWriter) detectLevel(s string) (Level, string) {
+	level := l.Level
+	if len(s) > 6 && s[0] == '>' { // stdLog.Println(`>Debug:message`)
+		pos := strings.Index(s, `:`)
+		if pos >= 0 {
+			levelText := s[1:pos]
+			if lv, ok := Levels[levelText]; ok {
+				level = lv
+				s = s[pos+1:]
+			}
+		}
+	}
+	return level, s
+}
+
 func (l *LoggerWriter) Printf(format string, v ...interface{}) {
-	l.Logger.Logf(l.Level, format, v...)
+	level, format := l.detectLevel(format)
+	l.Logger.Logf(level, format, v...)
 }
 
 // Entry represents a log entry.
