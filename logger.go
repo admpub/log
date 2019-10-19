@@ -173,7 +173,7 @@ type Logger struct {
 // ErrorWriter: os.Stderr, BufferSize: 1024, MaxLevel: LevelDebug,
 // Category: app, Formatter: DefaultFormatter
 func NewLogger(args ...string) *Logger {
-	return NewWithCallDepth(0, args...)
+	return NewWithCallDepth(DefaultCallDepth, args...)
 }
 
 // NewWithCallDepth creates a root logger.
