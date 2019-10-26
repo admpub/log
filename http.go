@@ -22,7 +22,7 @@ type httpLevel struct {
 }
 
 func (h httpLevel) Tag() string {
-	return `[` + fmt.Sprint(h.Code) + `]`
+	return `[ ` + fmt.Sprint(h.Code) + ` ]`
 }
 
 func (l httpLevel) ColorLevel() Leveler {
