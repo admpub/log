@@ -5,6 +5,7 @@
 package log_test
 
 import (
+	std "log"
 	"strings"
 	"testing"
 
@@ -58,6 +59,9 @@ func TestConsoleTarget(t *testing.T) {
 
 	logger.Infof("t1: %v", 2)
 	logger.GetLogger("system.db").Infof("t2: %v", 3)
+
+	stdLogger := std.New(logger.Writer(log.LevelInfo), ``, 0)
+	stdLogger.Println(`:200: test`)
 
 	logger.Close()
 	<-target.done

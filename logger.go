@@ -64,7 +64,7 @@ func (l *LoggerWriter) detectLevel(s string) (Leveler, string) {
 		s2 := s[1:]
 		pos := strings.Index(s2, `:`)
 		if pos >= 0 {
-			httpCode := s2[1:pos]
+			httpCode := s2[0:pos]
 			code, err := strconv.Atoi(httpCode)
 			if err != nil {
 				return level, s
@@ -78,6 +78,14 @@ func (l *LoggerWriter) detectLevel(s string) (Leveler, string) {
 func (l *LoggerWriter) Printf(format string, v ...interface{}) {
 	level, format := l.detectLevel(format)
 	l.Logger.Logf(level, format, v...)
+}
+
+func (l *LoggerWriter) Println(v ...interface{}) {
+	level := l.Level
+	if len(v) > 0 {
+		level, v[0] = l.detectLevel(fmt.Sprint(v[0]))
+	}
+	l.Logger.Log(level, v...)
 }
 
 // Entry represents a log entry.
