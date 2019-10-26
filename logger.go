@@ -71,6 +71,20 @@ var (
 	DefaultCallDepth = 4
 )
 
+// HTTPStatusLevelName HTTP状态码相应级别名称
+func HTTPStatusLevelName(httpCode int) string {
+	s := `Info`
+	switch {
+	case httpCode >= 500:
+		s = `Error`
+	case httpCode >= 400:
+		s = `Warn`
+	case httpCode >= 300:
+		s = `Debug`
+	}
+	return s
+}
+
 func GetLevel(level string) (Level, bool) {
 	level = strings.Title(level)
 	l, y := Levels[level]
@@ -105,13 +119,31 @@ func (l *LoggerWriter) Write(p []byte) (n int, err error) {
 
 func (l *LoggerWriter) detectLevel(s string) (Level, string) {
 	level := l.Level
-	if len(s) > 6 && s[0] == '>' { // stdLog.Println(`>Debug:message`)
+	if len(s) <= 6 {
+		return level, s
+	}
+	switch s[0] {
+	case '>': // stdLog.Println(`>Debug:message`)
 		pos := strings.Index(s, `:`)
 		if pos >= 0 {
 			levelText := s[1:pos]
 			if lv, ok := Levels[levelText]; ok {
 				level = lv
 				s = s[pos+1:]
+			}
+		}
+	case ':': // stdLog.Println(`:200:message`)
+		s2 := s[1:]
+		pos := strings.Index(s2, `:`)
+		if pos >= 0 {
+			httpCode := s2[1:pos]
+			code, err := strconv.Atoi(httpCode)
+			if err != nil {
+				return level, s
+			}
+			levelText := HTTPStatusLevelName(code)
+			if lv, ok := Levels[levelText]; ok {
+				level = lv
 			}
 		}
 	}
