@@ -88,7 +88,7 @@ func (t *ConsoleTarget) Process(e *Entry) {
 
 func (t *ConsoleTarget) ColorizeFlag(e *Entry) string {
 	s := e.Level.Tag()
-	cs, ok := colorBrushes[e.Level]
+	cs, ok := colorBrushes[e.Level.ColorLevel()]
 	if ok {
 		return cs.SprintFunc()(s) + e.String()
 	}
@@ -96,7 +96,7 @@ func (t *ConsoleTarget) ColorizeFlag(e *Entry) string {
 }
 
 func (t *ConsoleTarget) ColorizeRow(e *Entry) string {
-	cs, ok := colorBrushes[e.Level]
+	cs, ok := colorBrushes[e.Level.ColorLevel()]
 	if ok {
 		return cs.SprintFunc()(e.String())
 	}
