@@ -13,7 +13,7 @@ import (
 	"github.com/admpub/color"
 )
 
-var colorBrushes = map[Level]*color.Color{
+var colorBrushes = map[Leveler]*color.Color{
 	LevelDebug: color.New(color.FgHiCyan),    // cyan
 	LevelInfo:  color.New(color.FgHiGreen),   // green
 	LevelWarn:  color.New(color.FgHiYellow),  // yellow
@@ -87,8 +87,7 @@ func (t *ConsoleTarget) Process(e *Entry) {
 }
 
 func (t *ConsoleTarget) ColorizeFlag(e *Entry) string {
-	level := e.Level.String()
-	s := `[` + LevelUppers[level] + `]`
+	s := e.Level.Tag()
 	cs, ok := colorBrushes[e.Level]
 	if ok {
 		return cs.SprintFunc()(s) + e.String()

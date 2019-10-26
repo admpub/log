@@ -5,9 +5,10 @@
 package log_test
 
 import (
-	"github.com/admpub/log"
 	"strings"
 	"testing"
+
+	"github.com/admpub/log"
 )
 
 func TestFilterAllow(t *testing.T) {
@@ -29,7 +30,7 @@ func TestFilterAllow(t *testing.T) {
 	for _, test := range tests {
 		filter := log.Filter{MaxLevel: log.LevelDebug, Categories: test.cats}
 		filter.Init()
-		e := &log.Entry{Category: test.cat}
+		e := &log.Entry{Category: test.cat, Level: log.LevelDebug}
 		if filter.Allow(e) != test.expected {
 			t.Errorf("filter(%q).Allow(%q) = %v, expected %v", strings.Join(test.cats, ","), test.cat, filter.Allow(e), test.expected)
 		}
