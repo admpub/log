@@ -16,7 +16,7 @@ func ExampleLogger_Error() {
 	// log without formatting
 	logger.Error("a plain message")
 	// log with formatting
-	logger.Error("the value is: %v", 100)
+	logger.Errorf("the value is: %v", 100)
 }
 
 func ExampleNewConsoleTarget() {

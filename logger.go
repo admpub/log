@@ -52,6 +52,14 @@ var (
 		LevelFatal: "Fatal",
 	}
 
+	LevelUppers = map[string]string{
+		`Debug`: "DEBUG",
+		`Info`:  " INFO",
+		`Warn`:  " WARN",
+		`Error`: "ERROR",
+		`Fatal`: "FATAL",
+	}
+
 	Levels = map[string]Level{
 		"Debug": LevelDebug,
 		"Info":  LevelInfo,
