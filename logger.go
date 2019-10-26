@@ -69,7 +69,7 @@ func (l *LoggerWriter) detectLevel(s string) (Leveler, string) {
 			if err != nil {
 				return level, s
 			}
-			level = NewHttpLevel(code)
+			level = NewHttpLevel(code, l.Level)
 		}
 	}
 	return level, s

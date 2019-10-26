@@ -22,6 +22,7 @@ type (
 		fmt.Stringer
 		Int() int
 		Tag() string
+		ColorLevel() Leveler
 	}
 )
 
@@ -82,12 +83,17 @@ func (l Level) String() string {
 	return "Unknown"
 }
 
-// Int .
+// Int 等级数值
 func (l Level) Int() int {
 	return int(l)
 }
 
-// Tag .
+// Tag 标签
 func (l Level) Tag() string {
 	return `[` + LevelUppers[l.String()] + `]`
+}
+
+// ColorLevel 颜色等级
+func (l Level) ColorLevel() Leveler {
+	return l
 }
