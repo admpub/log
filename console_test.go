@@ -59,8 +59,6 @@ func TestConsoleTarget(t *testing.T) {
 	logger.Infof("t1: %v", 2)
 	logger.GetLogger("system.db").Infof("t2: %v", 3)
 
-	logger.Writer(log.LevelDebug).Write([]byte(`:200: test`))
-
 	logger.Close()
 	<-target.done
 
