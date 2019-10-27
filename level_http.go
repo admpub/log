@@ -30,5 +30,5 @@ func (h httpLevel) Tag() string {
 }
 
 func (l httpLevel) Color() *color.Color {
-	return colorBrushes[l]
+	return colorBrushes[l.Leveler]
 }
