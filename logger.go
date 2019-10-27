@@ -76,7 +76,7 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 
 	logger, ok := l.categories[category]
 	if !ok {
-		logger = l.Clone()
+		logger = l.clone()
 		logger.Category = category
 		l.categories[category] = logger
 	}
@@ -86,7 +86,7 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 	return logger
 }
 
-func (l *Logger) Clone() *Logger {
+func (l *Logger) clone() *Logger {
 	logger := &Logger{
 		coreLogger: l.coreLogger,
 		Category:   l.Category,
