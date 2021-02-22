@@ -68,7 +68,7 @@ func (t *MemoryTarget) Close() {
 }
 
 func TestLoggerLog(t *testing.T) {
-	logger := log.NewLogger().Sync()
+	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0)).Sync()
 	target := &MemoryTarget{
 		Filter: &log.Filter{MaxLevel: log.LevelDebug},
 		ready:  make(chan bool, 0),
