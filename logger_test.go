@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/admpub/log"
 )
@@ -71,7 +72,7 @@ func TestLoggerLog(t *testing.T) {
 	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0)).Sync()
 	target := &MemoryTarget{
 		Filter: &log.Filter{MaxLevel: log.LevelDebug},
-		ready:  make(chan bool, 0),
+		ready:  make(chan bool),
 	}
 	logger.SetTarget()
 	if target.open {
@@ -98,8 +99,8 @@ func TestLoggerLog(t *testing.T) {
 		}
 		t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 6)
 	}
-	levels := ""
-	messages := ""
+	var levels string
+	var messages string
 	for i := 0; i < 6; i++ {
 		levels += target.entries[i].Level.String() + ","
 		messages += target.entries[i].Message + ","
@@ -112,15 +113,35 @@ func TestLoggerLog(t *testing.T) {
 	if messages != expectedMessages {
 		t.Errorf("messages = %v, expected %v", messages, expectedMessages)
 	}
-	//*
+}
+
+func TestLoggerLogPanic(t *testing.T) {
+	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0))
+	defer logger.Close()
+	//logger.SetFatalAction(log.ActionExit)
+	logger.SetFatalAction(log.ActionPanic)
+	target := &MemoryTarget{
+		Filter: &log.Filter{MaxLevel: log.LevelDebug},
+		ready:  make(chan bool),
+	}
 	consoleTarget := log.NewConsoleTarget()
-	logger.Async().SetTarget(consoleTarget)
-	for i := 0; i < 10; i++ {
+	logger.SetTarget(consoleTarget, target)
+	for i := 0; i < 100; i++ {
 		logger.Infof(`async: %d`, i+1)
 	}
 	logger.Writer(log.LevelDebug).Write([]byte(`test writer`))
+	defer func() {
+		if e := recover(); e != nil {
+			time.Sleep(1 * time.Second)
+			if len(target.entries) != 102 {
+				for i, v := range target.entries {
+					fmt.Printf("%v.\t%#v\n", i, *v)
+				}
+				t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 102)
+			}
+		}
+	}()
 	logger.Fatal(`fatal.`)
-	logger.Sync().Error(`end.`)
-	logger.Close()
-	//*/
+	logger.Error(`end.`)
+	//panic(`OK`)
 }

@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/admpub/log"
 )
@@ -33,7 +34,14 @@ func TestFileTarget(t *testing.T) {
 	logFile := "app.log"
 	os.Remove(logFile)
 
-	logger := log.NewLogger().Sync()
+	logger := log.NewLogger()
+	defer logger.Close()
+	defer func() {
+		if e := recover(); e != nil {
+			t.Log(e)
+		}
+	}()
+	logger.SetFatalAction(log.ActionPanic)
 	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.Categories = []string{"system.*"}
@@ -41,7 +49,10 @@ func TestFileTarget(t *testing.T) {
 	logger.Open()
 	logger.Infof("t1: %v", 2)
 	logger.GetLogger("system.db").Infof("t2: %v", 3)
-	logger.Close()
+	for i := 0; i < 100; i++ {
+		logger.GetLogger("system.db").Infof(`async: %d`, i+1)
+	}
+	logger.GetLogger("system.db").Fatal(`fatal.file: `, time.Now())
 
 	bytes, err := ioutil.ReadFile(logFile)
 	if err != nil {
