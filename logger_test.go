@@ -69,7 +69,7 @@ func (t *MemoryTarget) Close() {
 }
 
 func TestLoggerLog(t *testing.T) {
-	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0)).Sync()
+	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0)).Sync().SetFatalAction(log.ActionNothing)
 	target := &MemoryTarget{
 		Filter: &log.Filter{MaxLevel: log.LevelDebug},
 		ready:  make(chan bool),
@@ -119,7 +119,6 @@ func TestLoggerLogPanic(t *testing.T) {
 	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0))
 	defer logger.Close()
 	//logger.SetFatalAction(log.ActionExit)
-	logger.SetFatalAction(log.ActionPanic)
 	target := &MemoryTarget{
 		Filter: &log.Filter{MaxLevel: log.LevelDebug},
 		ready:  make(chan bool),

@@ -41,7 +41,6 @@ func TestFileTarget(t *testing.T) {
 			t.Log(e)
 		}
 	}()
-	logger.SetFatalAction(log.ActionPanic)
 	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.Categories = []string{"system.*"}
