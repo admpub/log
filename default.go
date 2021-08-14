@@ -108,8 +108,8 @@ var (
 	DefaultConsoleColorize = !color.NoColor
 
 	// target file
-	DefaultFileMaxBytes    int64 = 10 * 1024 * 1024
-	DefaultFileBackupCount       = 10
+	DefaultFileMaxBytes    int64 = 100 * 1024 * 1024 // 100M
+	DefaultFileBackupCount       = 30                // 30
 
 	// target network
 	DefaultNetworkType    = `tcp`
