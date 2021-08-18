@@ -85,14 +85,6 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 		}
 		t.queue = queueChan.New(t.BackupCount)
 		t.queue.Dynamic()
-	}
-	t.openedFile = t.getFileName()
-	t.createDir(t.openedFile)
-	t.fd, err = os.OpenFile(t.openedFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
-	if err != nil {
-		return fmt.Errorf("FileTarget was unable to create a log file: %v", err)
-	}
-	if t.Rotate {
 		t.recordOldLogs()
 	}
 	return nil
@@ -170,20 +162,32 @@ func (t *FileTarget) recordOldLogs() {
 // Process saves an allowed log message into the log file.
 func (t *FileTarget) Process(e *Entry) {
 	if e == nil {
-		t.fd.Close()
-		t.close <- true
+		t.Close()
 		return
 	}
-	if t.fd != nil && t.Allow(e) {
-		if t.Rotate {
-			t.rotate(int64(len(e.String()) + 1))
-		}
-		n, err := t.fd.Write([]byte(e.String() + "\n"))
-		t.currentBytes += int64(n)
-		if err != nil {
-			fmt.Fprintf(t.errWriter, "FileTarge write error: %v\n", err)
+	if !t.Allow(e) {
+		return
+	}
+	_, err := t.Write([]byte(e.String() + "\n"))
+	if err != nil {
+		fmt.Fprintf(t.errWriter, "FileTarge write error: %v\n", err)
+	}
+	if t.Rotate {
+		t.rotate()
+	}
+}
+
+func (t *FileTarget) Write(b []byte) (int, error) {
+	if t.fd == nil {
+		if err := t.createLogFile(t.getFileName()); err != nil {
+			return 0, err
 		}
 	}
+	n, err := t.fd.Write(b)
+	t.mutex.Lock()
+	t.currentBytes += int64(n)
+	t.mutex.Unlock()
+	return n, err
 }
 
 // Close closes the file target.
@@ -202,13 +206,11 @@ func (t *FileTarget) getFileName() string {
 	return t.FileName
 }
 
-func (t *FileTarget) rotate(bytes int64) {
+func (t *FileTarget) rotate() {
 	fileName := t.getFileName()
-	if t.openedFile == fileName && (t.currentBytes+bytes <= t.MaxBytes || bytes > t.MaxBytes) {
+	if t.openedFile == fileName && t.currentBytes <= t.MaxBytes {
 		return
 	}
-	t.fd.Close()
-	t.currentBytes = 0
 	var err error
 	if t.BackupCount > 0 {
 		for i := t.queue.Length() - t.BackupCount; i >= 0; i-- {
@@ -241,6 +243,16 @@ func (t *FileTarget) rotate(bytes int64) {
 		}
 	}
 	t.queue.PushTS(newPath)
+	t.createLogFile(fileName)
+}
+
+func (t *FileTarget) createLogFile(fileName string) (err error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	if t.fd != nil {
+		t.fd.Close()
+	}
+	t.currentBytes = 0
 	t.createDir(fileName)
 	t.fd, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
@@ -248,6 +260,7 @@ func (t *FileTarget) rotate(bytes int64) {
 		fmt.Fprintf(t.errWriter, "FileTarget was unable to create a log file: %v\n", err)
 	}
 	t.openedFile = fileName
+	return
 }
 
 func (t *FileTarget) createDir(fileName string) {
