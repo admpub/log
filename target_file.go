@@ -129,11 +129,12 @@ func (t *FileTarget) recordOldLogs() {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || f == t.filePrefix {
+		if info.IsDir() || f == t.filePrefix || strings.HasPrefix(info.Name(), `.`) {
 			return nil
 		}
 
 		if strings.HasPrefix(f, t.filePrefix) {
+			println(`record old log file:`, f)
 			files.Add(f, info.ModTime().UnixNano())
 		}
 		return nil
