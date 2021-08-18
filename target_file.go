@@ -40,6 +40,7 @@ type FileTarget struct {
 	openedFile   string
 	scaned       bool
 	filePrefix   string
+	fileSuffix   string
 	mutex        sync.Mutex
 	logFiles     logFiles
 }
@@ -68,7 +69,7 @@ func (t *FileTarget) Open(errWriter io.Writer) (err error) {
 	}
 	t.timeFormat = ``
 	t.openedFile = ``
-	t.filePrefix, t.timeFormat, t.FileName, err = DateFormatFilename(t.FileName)
+	t.filePrefix, t.fileSuffix, t.timeFormat, t.FileName, err = DateFormatFilename(t.FileName)
 	if err != nil {
 		return
 	}
@@ -125,10 +126,13 @@ func (t *FileTarget) recordOldLogs() {
 		if err != nil {
 			return err
 		}
+		if info.IsDir() {
+			return nil
+		}
 		if f == t.filePrefix || strings.HasPrefix(info.Name(), `.`) {
 			return nil
 		}
-		if info.IsDir() {
+		if len(t.fileSuffix) > 0 && !strings.HasSuffix(f, t.fileSuffix) {
 			return nil
 		}
 
@@ -229,7 +233,7 @@ func (t *FileTarget) rotate() {
 	}
 	newPath := fileName
 	now := time.Now()
-	if t.openedFile == fileName {
+	if t.openedFile == fileName { // 文件名没变但尺寸超过设定值
 		newPath = fileName + `.` + now.Format(`20060102150405.00000`)
 		err = os.Rename(t.openedFile, newPath)
 		if err != nil {
@@ -274,7 +278,7 @@ func (t *FileTarget) createDir(fileName string) {
 	}
 }
 
-func DateFormatFilename(dfile string) (prefix string, dateformat string, filename string, err error) {
+func DateFormatFilename(dfile string) (prefix string, suffix, dateformat string, filename string, err error) {
 	p := strings.Index(dfile, `{date:`)
 	prefix = dfile
 	if p > -1 {
@@ -291,23 +295,23 @@ func DateFormatFilename(dfile string) (prefix string, dateformat string, filenam
 			hs = true
 		}
 		if fileName, err = filepath.Abs(fileName); err != nil {
-			return "", "", "", err
+			return
 		}
 		if p2 > -1 {
 			dateformat = placeholder[0:p2]
-			fileSuffix := placeholder[p2+1:]
+			suffix = placeholder[p2+1:]
 			switch filepath.Separator {
 			case '/':
 				dateformat = strings.Replace(dateformat, "\\", "/", -1)
-				fileSuffix = strings.Replace(fileSuffix, "\\", "/", -1)
+				suffix = strings.Replace(suffix, "\\", "/", -1)
 			case '\\':
 				dateformat = strings.Replace(dateformat, "/", "\\", -1)
-				fileSuffix = strings.Replace(fileSuffix, "/", "\\", -1)
+				suffix = strings.Replace(suffix, "/", "\\", -1)
 			}
 			if hs {
-				fileName = filepath.Join(fileName, `%v`+fileSuffix)
+				fileName = filepath.Join(fileName, `%v`+suffix)
 			} else {
-				fileName += `%v` + fileSuffix
+				fileName += `%v` + suffix
 			}
 		}
 		filename = fileName
@@ -316,11 +320,11 @@ func DateFormatFilename(dfile string) (prefix string, dateformat string, filenam
 			return
 		}
 		if prefix, err = filepath.Abs(prefix); err != nil {
-			return "", "", "", err
+			return
 		}
 	} else {
 		if prefix, err = filepath.Abs(prefix); err != nil {
-			return "", "", "", err
+			return
 		}
 		filename = prefix
 	}
