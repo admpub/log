@@ -22,11 +22,11 @@ func TestNewFileTarget(t *testing.T) {
 	if target.Rotate != true {
 		t.Errorf("NewFileTarget.Rotate = %v, expected %v", target.Rotate, true)
 	}
-	if target.BackupCount != 10 {
+	if target.BackupCount != log.DefaultFileBackupCount {
 		t.Errorf("NewFileTarget.BackupCount = %v, expected %v", target.BackupCount, 10)
 	}
-	if target.MaxBytes != (1 << 20) {
-		t.Errorf("NewFileTarget.MaxBytes = %v, expected %v", target.MaxBytes, 1<<20)
+	if target.MaxBytes != log.DefaultFileMaxBytes {
+		t.Errorf("NewFileTarget.MaxBytes = %v, expected %v", target.MaxBytes, log.DefaultFileMaxBytes)
 	}
 }
 
