@@ -43,6 +43,8 @@ func TestFileTarget(t *testing.T) {
 	}()
 	target := log.NewFileTarget()
 	target.FileName = logFile
+	target.BackupCount = 8
+	target.MaxBytes = 500
 	target.Categories = []string{"system.*"}
 	logger.SetTarget(target)
 	logger.Open()
