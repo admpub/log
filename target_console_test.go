@@ -83,6 +83,7 @@ func TestConsoleTargetAddSpace(t *testing.T) {
 	}
 	writer := &MemoryWriter{}
 	target.Writer = writer
+	target.ColorType = log.ColorFlag
 	logger.SetTarget(target)
 	logger.Info("a", "b", "c")
 

@@ -126,7 +126,23 @@ func TestLoggerLogPanic(t *testing.T) {
 	consoleTarget := log.NewConsoleTarget()
 	logger.SetTarget(consoleTarget, target)
 	for i := 0; i < 100; i++ {
-		logger.Infof(`async: %d`, i+1)
+		mod := i % 7
+		switch mod {
+		case log.LevelDebug.Int():
+			logger.Debugf(`async: %d`, i+1)
+		case log.LevelProgress.Int():
+			logger.Progressf(`async: %d`, i+1)
+		case log.LevelInfo.Int():
+			logger.Infof(`async: %d`, i+1)
+		case log.LevelOkay.Int():
+			logger.Okayf(`async: %d`, i+1)
+		case log.LevelWarn.Int():
+			logger.Warnf(`async: %d`, i+1)
+		case log.LevelError.Int():
+			logger.Errorf(`async: %d`, i+1)
+		default:
+			logger.Infof(`async: %d`, i+1)
+		}
 	}
 	logger.Writer(log.LevelDebug).Write([]byte(`test writer`))
 	defer func() {
