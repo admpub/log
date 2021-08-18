@@ -115,7 +115,7 @@ func TestLoggerLog(t *testing.T) {
 	}
 }
 
-func _TestLoggerLogPanic(t *testing.T) {
+func TestLoggerLogPanic(t *testing.T) {
 	logger := log.NewLogger().SetFormatter(log.ShortFileFormatter(0))
 	defer logger.Close()
 	//logger.SetFatalAction(log.ActionExit)
