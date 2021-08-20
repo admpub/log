@@ -32,16 +32,22 @@ func TestNewFileTarget(t *testing.T) {
 
 func TestFileTarget(t *testing.T) {
 	logFile := "app.log"
+	//logFile := "app-{date:" + time.RFC3339Nano + "}.log"
 	os.Remove(logFile)
 
 	logger := log.NewLogger()
-	defer logger.Close()
+	target := log.NewFileTarget()
 	defer func() {
+		logger.Close()
 		if e := recover(); e != nil {
 			t.Log(e)
 		}
+		expectedFileCount := target.BackupCount
+		if target.CountFiles() != expectedFileCount {
+			t.Errorf("NewFileTarget.CountFiles() = %v, expected %v", target.CountFiles(), expectedFileCount)
+		}
+		target.ClearFiles()
 	}()
-	target := log.NewFileTarget()
 	target.FileName = logFile
 	target.BackupCount = 8
 	target.MaxBytes = 500
