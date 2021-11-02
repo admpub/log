@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"testing"
-	"time"
 
 	"github.com/admpub/log"
 )
@@ -145,18 +144,4 @@ func TestLoggerLogPanic(t *testing.T) {
 		}
 	}
 	logger.Writer(log.LevelDebug).Write([]byte(`test writer`))
-	defer func() {
-		if e := recover(); e != nil {
-			time.Sleep(1 * time.Second)
-			if len(target.entries) != 102 {
-				for i, v := range target.entries {
-					fmt.Printf("%v.\t%#v\n", i, *v)
-				}
-				t.Errorf("len(target.entries) = %v, expected %v", len(target.entries), 102)
-			}
-		}
-	}()
-	logger.Fatal(`fatal.`)
-	logger.Error(`end.`)
-	//panic(`OK`)
 }
