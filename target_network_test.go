@@ -29,7 +29,7 @@ type LogServer struct {
 }
 
 func (s *LogServer) Start(network, address string) error {
-	s.done = make(chan bool, 0)
+	s.done = make(chan bool)
 	s.buffer = make([]byte, 1024)
 	listener, err := net.Listen(network, address)
 	if err != nil {

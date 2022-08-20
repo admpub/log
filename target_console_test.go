@@ -49,7 +49,7 @@ func (t *ConsoleTargetMock) Process(e *log.Entry) {
 func TestConsoleTarget(t *testing.T) {
 	logger := log.NewLogger().Sync()
 	target := &ConsoleTargetMock{
-		done:          make(chan bool, 0),
+		done:          make(chan bool),
 		ConsoleTarget: log.NewConsoleTarget(),
 	}
 	writer := &MemoryWriter{}
@@ -78,7 +78,7 @@ func TestConsoleTargetAddSpace(t *testing.T) {
 	logger := log.NewLogger().Sync()
 	logger.AddSpace = true
 	target := &ConsoleTargetMock{
-		done:          make(chan bool, 0),
+		done:          make(chan bool),
 		ConsoleTarget: log.NewConsoleTarget(),
 	}
 	writer := &MemoryWriter{}
