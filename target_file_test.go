@@ -78,11 +78,24 @@ func TestFileTarget(t *testing.T) {
 
 func TestSymlink(t *testing.T) {
 	source := fmt.Sprintf(`%d.test`, time.Now().UnixMilli())
+	err := os.WriteFile(source, []byte(source+"\n"), os.ModePerm)
+	assert.NoError(t, err)
 	os.Remove(`latest.test`)
-	err := os.Symlink(source, `latest.test`)
+	err = os.Symlink(source, `latest.test`)
 	assert.NoError(t, err)
 	err = os.Symlink(source, `latest.test`)
 	assert.ErrorIs(t, err, os.ErrExist)
 	err = log.ForceCreateSymlink(source, `latest.test`)
 	assert.NoError(t, err)
+
+	for i := 0; i < 10; i++ {
+		source := fmt.Sprintf(`%d.test`, time.Now().UnixMilli())
+		err := os.WriteFile(source, []byte(source+"\n"), os.ModePerm)
+		assert.NoError(t, err)
+		err = log.ForceCreateSymlink(source, `latest.test`)
+		assert.NoError(t, err)
+		time.Sleep(time.Second * 3)
+	}
+
+	// tail -F ./latest.test
 }
