@@ -5,6 +5,7 @@
 package log_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/admpub/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewFileTarget(t *testing.T) {
@@ -72,4 +74,15 @@ func TestFileTarget(t *testing.T) {
 	if !strings.Contains(string(bytes), "t2: 3") {
 		t.Errorf("Expected %q not found", "t2: 3")
 	}
+}
+
+func TestSymlink(t *testing.T) {
+	source := fmt.Sprintf(`%d.test`, time.Now().UnixMilli())
+	os.Remove(`latest.test`)
+	err := os.Symlink(source, `latest.test`)
+	assert.NoError(t, err)
+	err = os.Symlink(source, `latest.test`)
+	assert.ErrorIs(t, err, os.ErrExist)
+	err = log.ForceCreateSymlink(source, `latest.test`)
+	assert.NoError(t, err)
 }
