@@ -6,7 +6,6 @@ package log_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -63,9 +62,9 @@ func TestFileTarget(t *testing.T) {
 	}
 	logger.GetLogger("system.db").Fatal(`fatal.file: `, time.Now())
 
-	bytes, err := ioutil.ReadFile(logFile)
+	bytes, err := os.ReadFile(logFile)
 	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+		t.Fatalf("Unexpected error: %v: %v", logFile, err)
 	}
 
 	if strings.Contains(string(bytes), "t1: 2") {
