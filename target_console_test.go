@@ -17,8 +17,8 @@ func TestNewConsoleTarget(t *testing.T) {
 	if target.MaxLevel != log.LevelDebug {
 		t.Errorf("ConsoleTarget.MaxLevel = %v, expected %v", target.MaxLevel, log.LevelDebug)
 	}
-	if target.ColorMode != true {
-		t.Errorf("ConsoleTarget.ColorMode = %v, expected %v", target.ColorMode, true)
+	if target.ColorMode != log.DefaultConsoleColorize {
+		t.Errorf("ConsoleTarget.ColorMode = %v, expected %v", target.ColorMode, log.DefaultConsoleColorize)
 	}
 }
 

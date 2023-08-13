@@ -60,6 +60,11 @@ func TestFileTarget(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		logger.GetLogger("system.db").Infof(`async: %d`, i+1)
 	}
+	for i := 0; i < 10; i++ {
+		go func(i int) {
+			logger.GetLogger("system.db").Infof(`async: %d`, i+1)
+		}(i)
+	}
 	logger.GetLogger("system.db").Fatal(`fatal.file: `, time.Now())
 
 	bytes, err := os.ReadFile(logFile)
@@ -87,6 +92,7 @@ func TestSymlink(t *testing.T) {
 	err = log.ForceCreateSymlink(source, `latest.test`)
 	assert.NoError(t, err)
 
+	var sources []string
 	for i := 0; i < 10; i++ {
 		source := fmt.Sprintf(`%d.test`, time.Now().UnixMilli())
 		err := os.WriteFile(source, []byte(source+"\n"), os.ModePerm)
@@ -94,7 +100,12 @@ func TestSymlink(t *testing.T) {
 		err = log.ForceCreateSymlink(source, `latest.test`)
 		assert.NoError(t, err)
 		time.Sleep(time.Second * 3)
+		sources = append(sources, source)
 	}
 
+	os.Remove(`latest.test`)
+	for _, source := range sources {
+		os.Remove(source)
+	}
 	// tail -F ./latest.test
 }
