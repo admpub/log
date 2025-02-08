@@ -48,8 +48,8 @@ func NewNetworkTarget() *NetworkTarget {
 		Filter:     &log.Filter{MaxLevel: log.LevelDebug},
 		BufferSize: 1024,
 		Persistent: true,
-		Network:    log.DefaultNetworkType,
-		Address:    log.DefaultNetworkAddress,
+		Network:    DefaultNetworkType,
+		Address:    DefaultNetworkAddress,
 		close:      make(chan bool),
 	}
 }

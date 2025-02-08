@@ -141,16 +141,4 @@ var (
 	// target file
 	DefaultFileMaxBytes    int64 = 100 * 1024 * 1024 // 100M
 	DefaultFileBackupCount       = 30                // 30
-
-	// target network
-	DefaultNetworkType    = `tcp`
-	DefaultNetworkAddress = ``
-
-	// target mail
-	DefaultMailHost       = ``
-	DefaultMailUsername   = ``
-	DefaultMailPassword   = ``
-	DefaultMailSubject    = ``
-	DefaultMailSender     = ``
-	DefaultMailRecipients = []string{}
 )

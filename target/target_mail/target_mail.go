@@ -36,12 +36,12 @@ type MailTarget struct {
 func NewMailTarget() *MailTarget {
 	return &MailTarget{
 		Filter:     &log.Filter{MaxLevel: log.LevelDebug},
-		Host:       log.DefaultMailHost,
-		Username:   log.DefaultMailUsername,
-		Password:   log.DefaultMailPassword,
-		Subject:    log.DefaultMailSubject,
-		Sender:     log.DefaultMailSender,
-		Recipients: log.DefaultMailRecipients,
+		Host:       DefaultMailHost,
+		Username:   DefaultMailUsername,
+		Password:   DefaultMailPassword,
+		Subject:    DefaultMailSubject,
+		Sender:     DefaultMailSender,
+		Recipients: DefaultMailRecipients,
 		BufferSize: 1024,
 		close:      make(chan bool),
 	}
