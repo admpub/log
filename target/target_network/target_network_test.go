@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package log_test
+package target_network
 
 import (
 	"net"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewNetworkTarget(t *testing.T) {
-	target := log.NewNetworkTarget()
+	target := NewNetworkTarget()
 	if target.MaxLevel != log.LevelDebug {
 		t.Errorf("NetworkTarget.MaxLevel = %v, expected %v", target.MaxLevel, log.LevelDebug)
 	}
@@ -61,7 +61,7 @@ func TestNetworkTarget(t *testing.T) {
 	}
 
 	logger := log.NewLogger().Sync()
-	target := log.NewNetworkTarget()
+	target := NewNetworkTarget()
 	target.Network = network
 	target.Address = address
 	target.Categories = []string{"system.*"}

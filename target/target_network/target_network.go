@@ -2,18 +2,20 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package log
+package target_network
 
 import (
 	"errors"
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/admpub/log"
 )
 
 // NetworkTarget sends log messages over a network connection.
 type NetworkTarget struct {
-	*Filter
+	*log.Filter
 	// the network to connect to. Valid networks include
 	// tcp", "tcp4" (IPv4-only), "tcp6" (IPv6-only),
 	// "udp", "udp4" (IPv4-only), "udp6" (IPv6-only), "ip", "ip4"
@@ -32,7 +34,7 @@ type NetworkTarget struct {
 	// the size of the message channel.
 	BufferSize int
 
-	entries chan *Entry
+	entries chan *log.Entry
 	conn    net.Conn
 	close   chan bool
 }
@@ -43,11 +45,11 @@ type NetworkTarget struct {
 // You must specify the Network and Address fields.
 func NewNetworkTarget() *NetworkTarget {
 	return &NetworkTarget{
-		Filter:     &Filter{MaxLevel: LevelDebug},
+		Filter:     &log.Filter{MaxLevel: log.LevelDebug},
 		BufferSize: 1024,
 		Persistent: true,
-		Network:    DefaultNetworkType,
-		Address:    DefaultNetworkAddress,
+		Network:    log.DefaultNetworkType,
+		Address:    log.DefaultNetworkAddress,
 		close:      make(chan bool),
 	}
 }
@@ -66,7 +68,7 @@ func (t *NetworkTarget) Open(errWriter io.Writer) error {
 		return errors.New("NetworkTarget.Address must be specified")
 	}
 
-	t.entries = make(chan *Entry, t.BufferSize)
+	t.entries = make(chan *log.Entry, t.BufferSize)
 	t.conn = nil
 
 	if t.Persistent {
@@ -81,7 +83,7 @@ func (t *NetworkTarget) Open(errWriter io.Writer) error {
 }
 
 // Process puts filtered log messages into a channel for sending over network.
-func (t *NetworkTarget) Process(e *Entry) {
+func (t *NetworkTarget) Process(e *log.Entry) {
 	if t.Allow(e) {
 		select {
 		case t.entries <- e:

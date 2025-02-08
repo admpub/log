@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package log
+package target_mail
 
 import (
 	"errors"
@@ -10,11 +10,13 @@ import (
 	"io"
 	"net/smtp"
 	"strings"
+
+	"github.com/admpub/log"
 )
 
 // MailTarget sends log messages in emails via an SMTP server.
 type MailTarget struct {
-	*Filter
+	*log.Filter
 	Host       string   // SMTP server address
 	Username   string   // SMTP server login username
 	Password   string   // SMTP server login password
@@ -23,7 +25,7 @@ type MailTarget struct {
 	Recipients []string // the mail recipients
 	BufferSize int      // the size of the message channel.
 
-	entries chan *Entry
+	entries chan *log.Entry
 	close   chan bool
 }
 
@@ -33,13 +35,13 @@ type MailTarget struct {
 // You must specify these fields: Host, Username, Subject, Sender, and Recipients.
 func NewMailTarget() *MailTarget {
 	return &MailTarget{
-		Filter:     &Filter{MaxLevel: LevelDebug},
-		Host:       DefaultMailHost,
-		Username:   DefaultMailUsername,
-		Password:   DefaultMailPassword,
-		Subject:    DefaultMailSubject,
-		Sender:     DefaultMailSender,
-		Recipients: DefaultMailRecipients,
+		Filter:     &log.Filter{MaxLevel: log.LevelDebug},
+		Host:       log.DefaultMailHost,
+		Username:   log.DefaultMailUsername,
+		Password:   log.DefaultMailPassword,
+		Subject:    log.DefaultMailSubject,
+		Sender:     log.DefaultMailSender,
+		Recipients: log.DefaultMailRecipients,
 		BufferSize: 1024,
 		close:      make(chan bool),
 	}
@@ -66,7 +68,7 @@ func (t *MailTarget) Open(errWriter io.Writer) error {
 	if t.BufferSize < 0 {
 		return errors.New("MailTarget.BufferSize must be no less than 0")
 	}
-	t.entries = make(chan *Entry, t.BufferSize)
+	t.entries = make(chan *log.Entry, t.BufferSize)
 
 	go t.sendMessages(errWriter)
 
@@ -74,7 +76,7 @@ func (t *MailTarget) Open(errWriter io.Writer) error {
 }
 
 // Process puts filtered log messages into a channel for sending in emails.
-func (t *MailTarget) Process(e *Entry) {
+func (t *MailTarget) Process(e *log.Entry) {
 	if t.Allow(e) {
 		select {
 		case t.entries <- e:

@@ -1,6 +1,7 @@
-//+build !windows,!plan9
+//go:build !windows && !plan9
+// +build !windows,!plan9
 
-package log
+package target_syslog
 
 import (
 	"errors"
@@ -8,10 +9,12 @@ import (
 	"io"
 	"log/syslog"
 	"runtime"
+
+	"github.com/admpub/log"
 )
 
 type SyslogTarget struct {
-	*Filter
+	*log.Filter
 	Writer *syslog.Writer
 	close  chan bool
 }
@@ -19,7 +22,7 @@ type SyslogTarget struct {
 func NewSyslogTarget(prefix string) (*SyslogTarget, error) {
 	w, err := syslog.New(syslog.LOG_CRIT, prefix)
 	return &SyslogTarget{
-		Filter: &Filter{MaxLevel: LevelDebug},
+		Filter: &log.Filter{MaxLevel: log.LevelDebug},
 		Writer: w,
 		close:  make(chan bool),
 	}, err
@@ -39,7 +42,7 @@ func (t *SyslogTarget) Open(io.Writer) error {
 	return nil
 }
 
-func (t *SyslogTarget) Process(e *Entry) {
+func (t *SyslogTarget) Process(e *log.Entry) {
 	if e == nil {
 		t.close <- true
 		return
