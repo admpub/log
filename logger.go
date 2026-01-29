@@ -37,7 +37,12 @@ type Logger struct {
 // NewLogger creates a root logger.
 // The new logger takes these default options:
 // ErrorWriter: os.Stderr, BufferSize: 1024, MaxLevel: LevelDebug,
-// Category: app, Formatter: DefaultFormatter
+// Category: app, Formatter: NormalFormatter
+// It also adds a console target to the root logger.
+// All the options can be changed by calling the returned *Logger's
+// SetErrorWriter, SetBufferSize, SetMaxLevel, SetCategory, SetFormatter, and AddTarget methods.
+// The returned *Logger can also be used to create child loggers
+// by calling its GetLogger method.
 func NewLogger(opts ...Option) *Logger {
 	logger := &coreLogger{
 		ErrorWriter: os.Stderr,
