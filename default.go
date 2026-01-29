@@ -13,8 +13,8 @@ type defaultLogger struct {
 	*Logger
 }
 
-func GetLogger(category string, formatter ...Formatter) *Logger {
-	return DefaultLog.GetLogger(category, formatter...)
+func GetLogger(category string, opts ...Option) *Logger {
+	return DefaultLog.GetLogger(category, opts...)
 }
 
 func Categories() []string {

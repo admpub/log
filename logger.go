@@ -38,7 +38,7 @@ type Logger struct {
 // The new logger takes these default options:
 // ErrorWriter: os.Stderr, BufferSize: 1024, MaxLevel: LevelDebug,
 // Category: app, Formatter: DefaultFormatter
-func NewLogger(args ...string) *Logger {
+func NewLogger(opts ...Option) *Logger {
 	logger := &coreLogger{
 		ErrorWriter: os.Stderr,
 		BufferSize:  1024,
@@ -49,30 +49,30 @@ func NewLogger(args ...string) *Logger {
 		pid:         os.Getpid(),
 		open:        &atomic.Bool{},
 	}
-	category := `app`
-	if len(args) > 0 {
-		category = args[0]
-	}
 	logger.Targets = append(logger.Targets, NewConsoleTarget())
-	logger.Open()
-	return &Logger{
+	l := &Logger{
 		coreLogger: logger,
-		Category:   category,
+		Category:   `app`,
 		Formatter:  NormalFormatter,
 		categories: make(map[string]*Logger),
 	}
+	for _, opt := range opts {
+		opt(l)
+	}
+	logger.Open()
+	return l
 }
 
 // New creates a new Logger
-func New(args ...string) *Logger {
-	return NewLogger(args...)
+func New(opts ...Option) *Logger {
+	return NewLogger(opts...)
 }
 
 // GetLogger creates a logger with the specified category and log formatter.
 // Messages logged through this logger will carry the same category name.
 // The formatter, if not specified, will inherit from the calling logger.
 // It will be used to format all messages logged through this logger.
-func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
+func (l *Logger) GetLogger(category string, opts ...Option) *Logger {
 	l.catelock.RLock()
 	logger, ok := l.categories[category]
 	l.catelock.RUnlock()
@@ -83,8 +83,8 @@ func (l *Logger) GetLogger(category string, formatter ...Formatter) *Logger {
 		l.categories[category] = logger
 		l.catelock.Unlock()
 	}
-	if len(formatter) > 0 {
-		logger.Formatter = formatter[0]
+	for _, opt := range opts {
+		opt(logger)
 	}
 	return logger
 }

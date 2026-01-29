@@ -31,7 +31,7 @@ func TestGetLogger(t *testing.T) {
 	if logger1.Category != "testing" {
 		t.Errorf("logger1.Category = %v, expected %v", logger1.Category, "testing")
 	}
-	logger2 := logger.GetLogger("routing", formatter)
+	logger2 := logger.GetLogger("routing", log.OptionFormatter(formatter))
 	if logger2.Category != "routing" {
 		t.Errorf("logger2.Category = %v, expected %v", logger2.Category, "routing")
 	}
