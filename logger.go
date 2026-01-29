@@ -64,8 +64,11 @@ func NewLogger(opts ...Option) *Logger {
 }
 
 // New creates a new Logger
-func New(opts ...Option) *Logger {
-	return NewLogger(opts...)
+func New(category ...string) *Logger {
+	if len(category) > 0 {
+		return NewLogger(OptionCategory(category[0]))
+	}
+	return NewLogger()
 }
 
 // GetLogger creates a logger with the specified category and log formatter.
