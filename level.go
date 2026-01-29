@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/admpub/color"
@@ -24,16 +23,6 @@ type (
 
 	// Action 日志触发行为编号
 	Action int
-
-	// Leveler 日志等级接口
-	Leveler interface {
-		fmt.Stringer
-		IsEnabled(level Level) bool
-		Int() int
-		Tag() string
-		Color() *color.Color
-		Level() Level
-	}
 )
 
 var (

@@ -57,8 +57,8 @@ func AddTarget(targets ...Target) *Logger {
 	return DefaultLog.AddTarget(targets...)
 }
 
-func SetLevel(level string) *Logger {
-	return DefaultLog.SetLevel(level)
+func SetLevel(level string) {
+	DefaultLog.SetLevel(level)
 }
 
 func SetCallStack(level Level, callStack *CallStack) *Logger {
